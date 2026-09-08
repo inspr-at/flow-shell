@@ -24,6 +24,10 @@
   min-height: inherit;
 }
 
+.shell-scaffold {
+  --shell-content-padding-inline: inherit;
+}
+
 *,
 *::before,
 *::after {
@@ -93,9 +97,12 @@ input:focus-visible {
   gap: 10px;
   align-items: center;
   min-width: 0;
+  min-height: 36px;
   flex: 1 1 auto;
   overflow: hidden;
   font-weight: 650;
+  padding-block: 2px;
+  text-align: left;
 }
 
 .project-name,
@@ -639,16 +646,22 @@ dialog h2 {
 }
 
 @container shell (max-width: 760px) {
-  .shell-root {
+  .shell-scaffold {
     --shell-content-padding-inline: 20px;
   }
 
   .shell-header {
-    height: 72px;
-    gap: 12px;
+    height: auto;
+    min-height: 72px;
+    gap: 8px 12px;
+    flex-wrap: wrap;
+    align-content: center;
+    padding-block: 8px;
   }
 
   .identity {
+    order: 1;
+    flex: 0 0 auto;
     font-size: 17px;
     letter-spacing: 2px;
   }
@@ -658,17 +671,27 @@ dialog h2 {
     height: 34px;
   }
 
-  .project {
-    font-size: 12px;
-  }
-
-  .project .subtitle,
-  .shell-label:not(.shell-label-context),
   .header-divider {
     display: none;
   }
 
+  .project {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .project .subtitle,
+  .shell-label:not(.shell-label-context) {
+    display: none;
+  }
+
   .header-end {
+    order: 2;
+    margin-left: auto;
+    flex: 0 0 auto;
     gap: 8px;
   }
 
@@ -727,19 +750,27 @@ dialog h2 {
 }
 
 @container shell (max-width: 420px) {
-  .shell-root {
+  .shell-scaffold {
     --shell-content-padding-inline: 12px;
   }
 
   .shell-header {
-    gap: 8px;
+    gap: 6px 8px;
+    padding-block: 6px;
   }
 
-  .identity span {
-    max-width: 5ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .identity {
+    font-size: 15px;
+    letter-spacing: 1.5px;
+  }
+
+  .identity img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .shell-label-context {
+    max-width: 8ch;
   }
 
   .header-end {

@@ -500,13 +500,14 @@ export class InsprFlowShell extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="${new URL('./flow-shell.css', import.meta.url).href}" data-shell-css="true">
       <div class="shell-root">
+      <div class="shell-scaffold">
       <header class="shell-header">
-        <button type="button" class="identity" data-action="identity" aria-label="About INSPR shell">
+        <button type="button" class="identity" data-action="identity" aria-label="About ${escapeHtml(this.#state.header.appName)} shell">
           <img src="${escapeHtml(logoSrc)}" alt="">
           <span>${escapeHtml(this.#state.header.appName)}</span>
         </button>
         <span class="header-divider"></span>
-        <button type="button" class="project" data-action="project" title="${escapeHtml(projectLabel)}">
+        <button type="button" class="project" data-action="project" title="${escapeHtml(projectLabel)}" aria-label="Project: ${escapeHtml(projectLabel)}">
           <span class="project-name">${projectTitle}</span>${subtitle}
         </button>
         <div class="header-end">
@@ -582,6 +583,7 @@ export class InsprFlowShell extends HTMLElement {
         </div>
       </footer>
       <dialog data-shell-dialog></dialog>
+      </div>
       </div>`;
     this.#bindLayoutObservers();
   }

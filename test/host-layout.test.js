@@ -33,6 +33,18 @@ test('compact layout uses shell-root container queries, not :host self-query', (
   assert.doesNotMatch(css, /\.shell-label-context\s*\{[^}]*display:\s*none/);
 });
 
+test('compact padding variables apply on query-eligible descendant, not the container', () => {
+  assert.match(css, /\.shell-scaffold\s*\{[^}]*--shell-content-padding-inline:\s*inherit/);
+  assert.match(css, /@container shell \(max-width: 760px\)[\s\S]*\.shell-scaffold\s*\{[^}]*--shell-content-padding-inline:\s*20px/);
+  assert.match(css, /@container shell \(max-width: 420px\)[\s\S]*\.shell-scaffold\s*\{[^}]*--shell-content-padding-inline:\s*12px/);
+  assert.doesNotMatch(css, /@container shell[\s\S]*\.shell-root\s*\{[^}]*--shell-content-padding-inline/);
+});
+
+test('compact header wraps into two rows for narrow shell widths', () => {
+  assert.match(css, /@container shell \(max-width: 760px\)[\s\S]*\.shell-header\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(css, /@container shell \(max-width: 760px\)[\s\S]*\.project\s*\{[^}]*flex:\s*1\s+1\s+100%/);
+});
+
 test('bounded geometry helpers set horizontal viewport-fixed bounds', () => {
   const host = document.createElement('div');
   applyBoundedGeometry(host, { left: 48.4, width: 341.6 });
@@ -72,6 +84,11 @@ test('header project and context labels expose full values for truncation', asyn
     project.getAttribute('title'),
     'Northstar booking experience refresh Mobile-first delivery batch',
   );
+  assert.equal(
+    project.getAttribute('aria-label'),
+    'Project: Northstar booking experience refresh Mobile-first delivery batch',
+  );
+  assert.ok(shell.shadowRoot.querySelector('.shell-scaffold'));
   const instance = shell.shadowRoot.querySelector('.shell-label-context[title="Paimos dev"]');
   const version = shell.shadowRoot.querySelector('.shell-label-context[title="shell-0.1.2"]');
   assert.ok(instance);

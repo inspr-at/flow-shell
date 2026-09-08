@@ -56,12 +56,12 @@ Optional host inputs (layout only; no identity or execution semantics):
 | Input | Effect |
 |-------|--------|
 | `layout-mode` | `viewport` (default) or `bounded` for horizontal host-bound chrome. |
-| `--shell-content-padding-inline` (CSS custom property) | Horizontal padding for header, health row, and footer. Default `48px`; compact shell widths reduce it via container queries on `.shell-root`. |
+| `--shell-content-padding-inline` (CSS custom property) | Horizontal padding for header, health row, and footer. Default `48px`; compact shell widths reduce it via container queries on the internal `.shell-scaffold` descendant (not the `.shell-root` query container itself). |
 | `--shell-footer-space` | Reserved bottom space so main content is not hidden under the fixed footer. Measured from the live footer height when observers run; default `183px` before first measure. |
 | `content-padding` attribute | Sets `--shell-content-padding-inline` (for example `content-padding="20px"`). |
 | `footer-space` attribute | Overrides measured `--shell-footer-space` when hosts need a fixed reserve. |
 
-Compact header/footer rules use container queries on the internal `.shell-root` wrapper (not `:host`), so a 342px content column gets compact treatment even when the viewport is wider. Long project, instance, and version labels truncate with ellipsis; full values remain on `title` attributes and existing control labels.
+Compact header/footer rules use container queries on the internal `.shell-root` wrapper (not `:host`), with responsive padding applied on the `.shell-scaffold` descendant so a 342px content column gets compact treatment even when the viewport is wider. At narrow widths the header wraps into two rows so app identity, project title, version/instance, and account controls stay readable. Long project, instance, and version labels truncate with ellipsis; full values remain on `title` attributes, `aria-label`, and existing control labels.
 
 `examples/host-sidebar/` is a minimal sidebar-host fixture with `layout-mode="bounded"`, a 2000px tall scroll block, and sidebar expand/collapse controls. Serve with `python3 dev-server.py 8765` and open `examples/host-sidebar/index.html`.
 

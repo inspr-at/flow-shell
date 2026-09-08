@@ -9,6 +9,11 @@ const sidebarToggle = document.querySelector('#sidebar-toggle');
 
 shell.shellState = normalizeShellState(sidebarShellState);
 
+function shellStylesReady() {
+  const cssLink = shell.shadowRoot?.querySelector('link[data-shell-css="true"]');
+  return Boolean(cssLink?.sheet);
+}
+
 function footerVisible(footerRect) {
   const viewportHeight = window.innerHeight;
   return footerRect.top < viewportHeight && footerRect.bottom > 0;
@@ -37,8 +42,33 @@ function describeLayout() {
 }
 
 function refreshPanel() {
+  if (!shellStylesReady()) {
+    panel.textContent = 'Waiting for shell styles…';
+    return;
+  }
   const layout = describeLayout();
   panel.textContent = `scrollY=${layout.scrollY} · column ${layout.hostWidth}px at x=${layout.hostLeft} · footer ${layout.footerWidth}px at x=${layout.footerLeft}, top=${layout.footerTop}, visible=${layout.footerVisible} · account right=${layout.accountRight}px · bounds ${layout.fixedLeft}/${layout.fixedWidth}`;
+}
+
+function scheduleRefresh() {
+  requestAnimationFrame(() => requestAnimationFrame(refreshPanel));
+}
+
+function whenLayoutSettled(callback) {
+  const cssLink = shell.shadowRoot?.querySelector('link[data-shell-css="true"]');
+  if (!cssLink || cssLink.sheet) {
+    scheduleRefresh();
+    callback?.();
+    return;
+  }
+  cssLink.addEventListener(
+    'load',
+    () => {
+      scheduleRefresh();
+      callback?.();
+    },
+    { once: true },
+  );
 }
 
 shell.addEventListener('flow-intent', (event) => {
@@ -46,12 +76,12 @@ shell.addEventListener('flow-intent', (event) => {
   const item = document.createElement('li');
   item.textContent = `${detail.type}${detail.error ? ` · ${detail.error}` : ''}`;
   log.prepend(item);
-  refreshPanel();
+  scheduleRefresh();
 });
 
 sidebarToggle?.addEventListener('click', () => {
   document.body.classList.toggle('sidebar-expanded');
-  refreshPanel();
+  scheduleRefresh();
 });
 
 document.querySelector('#scroll-top')?.addEventListener('click', () => {
@@ -64,6 +94,10 @@ document.querySelector('#scroll-bottom')?.addEventListener('click', () => {
   window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
 });
 
-window.addEventListener('resize', refreshPanel);
-window.addEventListener('scroll', refreshPanel, { passive: true });
-refreshPanel();
+window.addEventListener('resize', scheduleRefresh);
+window.addEventListener('scroll', scheduleRefresh, { passive: true });
+
+const layoutObserver = new ResizeObserver(() => scheduleRefresh());
+layoutObserver.observe(shell);
+
+whenLayoutSettled();

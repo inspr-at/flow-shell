@@ -73,6 +73,9 @@ export class InsprFlowShell extends HTMLElement {
   attributeChangedCallback(name) {
     if (name in HOST_LAYOUT_VARS) {
       this.#syncHostLayoutVars();
+      if (name === 'footer-space') {
+        this.#syncFooterSpace();
+      }
       return;
     }
     if (name === 'layout-mode') {
@@ -115,9 +118,18 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   #syncFooterSpace() {
+    if (this.hasAttribute('footer-space')) return;
     const footer = this.shadowRoot?.querySelector('.shell-footer');
     if (!footer) return;
     applyFooterSpace(this, footer.getBoundingClientRect().height);
+  }
+
+  #bindBoundedGeometryListeners() {
+    if (!this.isConnected || !this.#isBounded()) return;
+    window.removeEventListener('resize', this.#onWindowGeometryChange);
+    window.removeEventListener('scroll', this.#onWindowGeometryChange);
+    window.addEventListener('resize', this.#onWindowGeometryChange);
+    window.addEventListener('scroll', this.#onWindowGeometryChange, { passive: true });
   }
 
   #teardownBoundedObservers() {
@@ -138,18 +150,27 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   #bindLayoutObservers() {
+    if (!this.isConnected) return;
+
     const footer = this.shadowRoot?.querySelector('.shell-footer');
-    if (!footer || typeof ResizeObserver !== 'function') {
-      this.#syncFooterSpace();
-      if (this.#isBounded()) this.#syncBoundedGeometry();
+    const hasResizeObserver = typeof ResizeObserver === 'function';
+
+    if (!footer) {
+      if (this.#isBounded()) {
+        this.#bindBoundedGeometryListeners();
+        this.#syncBoundedGeometry();
+      }
       return;
     }
 
-    if (!this.#footerObserver) {
-      this.#footerObserver = new ResizeObserver(() => this.#syncFooterSpace());
+    if (hasResizeObserver) {
+      if (!this.#footerObserver) {
+        this.#footerObserver = new ResizeObserver(() => this.#syncFooterSpace());
+      }
+      this.#footerObserver.disconnect();
+      this.#footerObserver.observe(footer);
     }
-    this.#footerObserver.disconnect();
-    this.#footerObserver.observe(footer);
+
     this.#syncFooterSpace();
 
     if (!this.#isBounded()) {
@@ -158,15 +179,15 @@ export class InsprFlowShell extends HTMLElement {
       return;
     }
 
-    if (!this.#hostObserver) {
-      this.#hostObserver = new ResizeObserver(() => this.#scheduleGeometrySync());
+    if (hasResizeObserver) {
+      if (!this.#hostObserver) {
+        this.#hostObserver = new ResizeObserver(() => this.#scheduleGeometrySync());
+      }
+      this.#hostObserver.disconnect();
+      this.#hostObserver.observe(this);
     }
-    this.#hostObserver.disconnect();
-    this.#hostObserver.observe(this);
-    window.removeEventListener('resize', this.#onWindowGeometryChange);
-    window.removeEventListener('scroll', this.#onWindowGeometryChange);
-    window.addEventListener('resize', this.#onWindowGeometryChange);
-    window.addEventListener('scroll', this.#onWindowGeometryChange, { passive: true });
+
+    this.#bindBoundedGeometryListeners();
     this.#syncBoundedGeometry();
   }
 
@@ -526,8 +547,12 @@ export class InsprFlowShell extends HTMLElement {
         </div>
         <div class="host-slot"><slot></slot></div>
       </div>
+      </div>
+      </div>
       <div class="notice shell-chrome-fixed" role="status" hidden></div>
       <footer class="shell-footer shell-chrome-fixed">
+      <div class="shell-footer-root">
+      <div class="shell-footer-scaffold">
         <section class="expanded-panel" ${this.#state.mapExpanded ? '' : 'hidden'}>
           <div class="expanded-heading">
             <div>
@@ -581,10 +606,10 @@ export class InsprFlowShell extends HTMLElement {
           </label>
           <button type="button" class="text-button" data-action="review-batch">Review batch</button>
         </div>
-      </footer>
-      <dialog data-shell-dialog></dialog>
       </div>
-      </div>`;
+      </div>
+      </footer>
+      <dialog data-shell-dialog></dialog>`;
     this.#bindLayoutObservers();
   }
 }

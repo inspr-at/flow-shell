@@ -190,8 +190,18 @@ input:focus-visible {
   border-top: 1px solid #cedce4;
   background: rgba(250, 252, 253, 0.96);
   backdrop-filter: blur(30px);
-  padding: 17px var(--shell-content-padding-inline) 15px;
   box-shadow: 0 -8px 40px #416f8810;
+}
+
+.shell-footer-root {
+  container-type: inline-size;
+  container-name: shell-footer;
+  width: 100%;
+}
+
+.shell-footer-scaffold {
+  --shell-content-padding-inline: inherit;
+  padding: 17px var(--shell-content-padding-inline) 15px;
 }
 
 .shell-chrome-fixed {
@@ -700,6 +710,13 @@ dialog h2 {
     font-size: 10px;
     flex-wrap: wrap;
   }
+}
+
+@container shell-footer (max-width: 760px) {
+  .shell-footer-scaffold {
+    --shell-content-padding-inline: 20px;
+    padding-block: 16px 12px;
+  }
 
   .bar-context {
     display: none;
@@ -711,10 +728,6 @@ dialog h2 {
 
   .mode-label {
     margin-left: auto;
-  }
-
-  .shell-footer {
-    padding-block: 16px 12px;
   }
 
   .step-button {
@@ -738,10 +751,6 @@ dialog h2 {
 
   .map-detail {
     margin-left: 61px;
-  }
-
-  dialog {
-    padding: 28px 24px;
   }
 
   .expanded-panel {
@@ -776,6 +785,12 @@ dialog h2 {
   .header-end {
     gap: 6px;
   }
+}
+
+@container shell-footer (max-width: 420px) {
+  .shell-footer-scaffold {
+    --shell-content-padding-inline: 12px;
+  }
 
   .step-button {
     padding: 0 4px;
@@ -784,5 +799,11 @@ dialog h2 {
 
   .step-button .product-tag {
     display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  dialog {
+    padding: 28px 24px;
   }
 }

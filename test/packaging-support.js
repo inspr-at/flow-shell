@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +59,7 @@ export function createTempRepo(prefix = 'flow-shell-pack-fixture-') {
 
 function shouldCopy(src) {
   const rel = src.slice(packageRoot.length).replace(/\\/g, '/');
+  if (rel === '/.git' || rel.startsWith('/.git/')) return false;
   if (rel.includes('/node_modules') || rel.endsWith('/node_modules')) return false;
   if (rel.includes('/dist/') || rel.endsWith('/dist')) return false;
   if (rel.endsWith('/release/source-provenance.json')) return false;
@@ -122,6 +123,54 @@ export function assertIndexUnchanged(repoRoot, beforeTree) {
 export function stagingResidue(outDir) {
   if (!existsSync(outDir)) return [];
   return readdirSync(outDir).filter((entry) => entry.startsWith('.publish-'));
+}
+
+/**
+ * Resolve one executable from PATH. Node is resolved from the current process.
+ *
+ * @param {string} name
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {string}
+ */
+export function resolveOnPath(name, env = process.env) {
+  if (name === 'node') return process.execPath;
+  for (const dir of (env.PATH || '').split(':')) {
+    if (!dir) continue;
+    const candidate = join(dir, name);
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(`cannot resolve ${name} on PATH`);
+}
+
+/**
+ * @param {string} name
+ * @param {NodeJS.ProcessEnv} env
+ */
+export function assertCommandUnavailableOnPath(name, env) {
+  for (const dir of (env.PATH || '').split(':')) {
+    if (!dir) continue;
+    const candidate = join(dir, name);
+    if (existsSync(candidate)) {
+      throw new Error(`${name} must not be available on the isolated PATH fixture (${candidate})`);
+    }
+  }
+}
+
+/**
+ * Build a temp directory containing only symlinked commands from the current PATH.
+ *
+ * @param {string[]} commands
+ * @returns {string}
+ */
+export function makeIsolatedPathBin(commands) {
+  const bin = mkdtempSync(join(tmpdir(), 'flow-pack-path-bin-'));
+  const seen = new Set();
+  for (const name of commands) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    symlinkSync(resolveOnPath(name), join(bin, name));
+  }
+  return bin;
 }
 
 export { dirname, fixtureRoot, packageRoot, umbrellaRoot };

@@ -19,9 +19,11 @@ import { expandAllowlistPaths, resolveCommit, validateArchivePath } from '../rel
 import { LEGACY_SEMVER_PUBLIC, publishImmutableReleasePair, stableArtifactFilename, stableManifestFilename, stableReleaseDirname, verifyReleasePair } from '../release/lib/manifest.mjs';
 import {
   assertIndexUnchanged,
+  assertCommandUnavailableOnPath,
   commitAll,
   createTempRepo,
   indexTree,
+  makeIsolatedPathBin,
   packageRootIn,
   seedUmbrellaPackageTree,
   stagingResidue,
@@ -35,24 +37,6 @@ const ARTIFACT_NAME = stableArtifactFilename(VERSION);
 const MANIFEST_NAME = stableManifestFilename(VERSION);
 const RELEASE_DIRNAME = stableReleaseDirname(VERSION);
 const COORDINATE = `npm:@inspr/flow-shell@${VERSION}.tgz`;
-
-function resolveOnPath(name) {
-  if (name === 'node') return NODE;
-  for (const dir of (process.env.PATH || '').split(':')) {
-    if (!dir) continue;
-    const candidate = join(dir, name);
-    if (existsSync(candidate)) return candidate;
-  }
-  throw new Error(`cannot resolve ${name} for no-trash PATH fixture`);
-}
-
-function makePathWithOnly(commands) {
-  const bin = mkdtempSync(join(tmpdir(), 'flow-pack-path-bin-'));
-  for (const name of commands) {
-    symlinkSync(resolveOnPath(name), join(bin, name));
-  }
-  return bin;
-}
 
 function listTarballPaths(archivePath) {
   return execFileSync('tar', ['-tzf', archivePath], { encoding: 'utf8' })
@@ -175,7 +159,7 @@ describe('INSPR-380 runtime packaging', () => {
       assert.equal(built.manifest.version, VERSION);
       assert.equal(built.manifest.version_scheme, LEGACY_SEMVER_PUBLIC);
       assert.equal(built.manifest.private, true);
-      assert.equal(built.manifest.release_channel, 'candidate-runtime-tgz');
+      assert.equal(built.manifest.release_channel, 'github-runtime-tgz');
       assert.match(built.manifest.source.commit, /^[0-9a-f]{40}$/);
       assert.equal(built.manifest.source.commit.includes('/'), false);
       verifyReleasePair(built.releaseDir, MANIFEST_NAME);
@@ -281,7 +265,12 @@ describe('INSPR-380 runtime packaging', () => {
   });
 
   it('a packaging test finishes on a PATH that has node npm git tar but no trash', { skip: process.env.FLOW_SHELL_SOURCE_PROOF === '1' }, () => {
-    const bin = makePathWithOnly(['node', 'npm', 'git', 'tar']);
+    const bin = makeIsolatedPathBin(['node', 'npm', 'git', 'tar', 'sh']);
+    const isolatedEnv = {
+      ...process.env,
+      PATH: bin,
+    };
+    assertCommandUnavailableOnPath('trash', isolatedEnv);
     const gitExecPath = execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim();
     try {
       const result = spawnSync(
@@ -292,7 +281,7 @@ describe('INSPR-380 runtime packaging', () => {
           encoding: 'utf8',
           timeout: 60_000,
           env: {
-            PATH: `${bin}:/bin`,
+            PATH: bin,
             GIT_EXEC_PATH: gitExecPath,
             HOME: process.env.HOME,
             TMPDIR: process.env.TMPDIR,

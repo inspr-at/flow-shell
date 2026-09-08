@@ -1,0 +1,8 @@
+{
+  "fixture_version": "inspr.flow-identity-invalid-patch/0.1-draft",
+  "base": "../valid/labelled-local-host.json",
+  "expected_codes": ["ORGANIZATION_INVENTED"],
+  "operations": [
+    { "op": "replace", "path": "/organization_ref", "value": "host_fixture_a:project:northstar" }
+  ]
+}

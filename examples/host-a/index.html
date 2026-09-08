@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>INSPR Flow Shell · Host A</title>
+    <link rel="icon" href="../../src/assets/inspr-logo.svg" type="image/svg+xml">
+    <style>
+      body { margin: 0; background: #f5f8fa; color: #253b4b; font: 14px system-ui, sans-serif; }
+      .focus { max-width: 688px; margin: 0 auto; padding: 24px; }
+      .composer { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid #d2dfe7; border-radius: 18px; }
+      textarea { width: 100%; min-height: 70px; border: 0; background: transparent; resize: vertical; }
+      .primary { background: #284b62; color: #fff; border: 0; border-radius: 10px; padding: 12px 18px; }
+      #intent-log { font: 11px ui-monospace, monospace; max-height: 180px; overflow: auto; padding-left: 18px; }
+    </style>
+  </head>
+  <body>
+    <inspr-flow-shell logo-src="../../src/assets/inspr-logo.svg">
+      <section class="focus">
+        <p class="eyebrow" style="font-size:10px;font-weight:700;letter-spacing:1.9px;color:#8c7747">HOST A · BUILD FOCUS · LABELLED LOCAL-HOST FIXTURE · NO LIVE IDENTITY</p>
+        <h1 style="font-size:clamp(28px,3vw,42px);letter-spacing:-1px">Make room for what is next.</h1>
+        <p style="color:#627581;line-height:1.7">Standalone host A embeds the same shell package with a labelled local-host identity fixture. It is not live sign-in. Main content stays host-owned; footer/header emit intents only. The host must revalidate opaque bindings before any start.</p>
+        <form id="proposal-form" class="composer">
+          <label for="proposal" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Describe a draft idea</label>
+          <textarea id="proposal" name="proposal" placeholder="Describe a change or improvement" required></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+            <span style="font-size:11px;color:#627581">Saved as draft intent. Never starts delivery.</span>
+            <button class="primary" type="submit">Save draft idea</button>
+          </div>
+        </form>
+        <h2 style="font-size:13px;margin-top:28px">Intent log</h2>
+        <ol id="intent-log"></ol>
+      </section>
+    </inspr-flow-shell>
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

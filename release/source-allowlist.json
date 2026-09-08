@@ -1,0 +1,43 @@
+{
+  "description": "Closed inventory for the @inspr/flow-shell source candidate. Package paths are relative to this package. Curated synthetic contract fixtures are copied from frozen sibling contracts during Git-mode export and already live under fixtures/contracts/ in an extracted tree.",
+  "paths": [
+    ".gitignore",
+    "LICENSE",
+    "NOTICES.json",
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    "dev-server.py",
+    "examples/",
+    "src/",
+    "test/",
+    "release/",
+    "fixtures/contracts/"
+  ],
+  "contract_trees": [
+    {
+      "from": "contracts/flow-identity/fixtures/valid/",
+      "to": "fixtures/contracts/flow-identity/valid/"
+    },
+    {
+      "from": "contracts/flow-identity/fixtures/invalid/",
+      "to": "fixtures/contracts/flow-identity/invalid/"
+    },
+    {
+      "from": "contracts/delivery/fixtures/valid/",
+      "to": "fixtures/contracts/delivery/valid/"
+    }
+  ],
+  "forbidden_patterns": [
+    "^\\.env",
+    "^node_modules/",
+    "^dist/",
+    "^AGENTS\\.md$",
+    "worker-result",
+    "\\.age$",
+    "^\\.git/",
+    "doctrine",
+    "^CLAUDE\\.md$",
+    "^VISION\\.md$"
+  ]
+}

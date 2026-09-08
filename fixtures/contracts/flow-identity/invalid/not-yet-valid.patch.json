@@ -1,0 +1,8 @@
+{
+  "fixture_version": "inspr.flow-identity-invalid-patch/0.1-draft",
+  "base": "../valid/labelled-local-host.json",
+  "expected_codes": ["NOT_YET_VALID"],
+  "operations": [
+    { "op": "replace", "path": "/issued_at", "value": "2026-09-07T12:05:00Z" }
+  ]
+}

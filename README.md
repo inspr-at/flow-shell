@@ -1,0 +1,110 @@
+# @inspr/flow-shell
+
+Reusable INSPR delivery shell: compact identity header, branch-map footer, and an explicit intent boundary for host applications.
+
+PPM: **INSPR-380** packages the INSPR-375/INSPR-379 accepted shell for independent host consumption. This is a **0.1.1 local source/runtime candidate** (`legacy-semver-public`), not a public repository, tag, or npm publication. Local **0.1.0** remains an immutable superseded unpublished candidate in `dist/`; do not overwrite or repack it. `private: true` remains the npm publish guard and does not claim the `@inspr` npm namespace.
+
+Original work is licensed under **AGPL-3.0-only**. See `LICENSE` and `NOTICES.json`. Third-party test tooling keeps its own licenses. This candidate does not relicense anything.
+
+This package implements the approved concept direction as a **runnable shell**, not a production deployment or another disconnected design study.
+
+## Scope
+
+- Native `<inspr-flow-shell>` Web Component
+- Pure state, gating, forecast formatting, sanitization, and intent helpers
+- Optional `fromDeliveryContract()` adapter boundary for draft `inspr.delivery-stream/0.1-draft` JSON (display hints only; does not duplicate backend validation)
+- Optional host-issued `inspr.flow-identity/0.1-draft` context, supplied separately. Schema validity is not authentication.
+- Two standalone example hosts sharing one implementation
+
+## Non-goals
+
+- No execution authority, auth backend, or provider coupling
+- No shared sign-in, token broker, raw OIDC subject, email join, or invented organization
+- No remote dependencies (fonts, CDNs, npm runtime deps)
+- Stage clicks and natural-language proposals **never execute**; hosts revalidate authority on `flow:start-intent`
+- Read-only navigation may run without identity context. Consequential start/approval intents require current host-issued context and reject missing, expired, stale, mismatched, or agent-where-human-required bindings.
+- Draft contract mapping distinguishes Paimos build/test, Pharos deploy/verify, and Janus prepare/apply. Completed batches derive stage and product from actual tasks; unused stages stay not-in-batch or unknown, not performed. Requesting an explicit empty, null, or unknown `batchRef` fails closed; only omitting `batchRef` may select the last batch.
+
+## Usage
+
+Install the runtime tarball as a host dependency (no runtime npm packages, CDN, or sibling checkout):
+
+```html
+<inspr-flow-shell>
+  <section><!-- host-owned main content --></section>
+</inspr-flow-shell>
+<script type="module">
+  import '@inspr/flow-shell';
+
+  const shell = document.querySelector('inspr-flow-shell');
+  shell.shellState = { /* normalized state */ };
+  shell.addEventListener('flow-intent', (event) => {
+    // host handles navigation / authorization / execution
+    console.log(event.detail);
+  });
+</script>
+```
+
+The Web Component loads `flow-shell.css` from `import.meta.url`. The default logo is `./assets/inspr-logo.svg` next to the module; hosts may override with `logo-src` pointing at `@inspr/flow-shell/assets/inspr-logo.svg` or their own asset. In-tree examples under `examples/` still use relative `../../src/` paths for local demo serving.
+
+## Examples
+
+```sh
+python3 dev-server.py 8765
+# open examples/host-a/index.html and examples/host-b/index.html
+```
+
+## Tests
+
+```sh
+npm ci
+npm test
+```
+
+Node 24 built-in test runner only. `happy-dom` is a locked development dependency for the committed harness; it is not a runtime dependency.
+
+## Packaging candidate
+
+Local only. Root review owns any later public repository, tag, or publication. Do not `npm publish`, create a tag, or push this private umbrella.
+
+```sh
+npm run release:build
+npm run source:export
+```
+
+`release:build` writes one immutable runtime coordinate under `dist/inspr-flow-shell-0.1.1/` (npm tarball + sidecar manifest) from the closed allowlist in `release/allowlist.json`. `source:export` writes `dist/inspr-flow-shell-source-0.1.1/` with tests, release tooling, license notices, and the curated synthetic contract fixtures needed by those tests. Canonical published bytes are GNU tar + Node 24 with Git committer-epoch timestamps; local BSD tar builds are valid for development and are not claimed byte-identical. Provenance records opaque commit SHAs and tree/lock digests only. Packaging tests retain owned temp residue with a bounded warning if the `trash` CLI is absent; they never `rm`.
+
+Extracted source has `package.json` at the tree root. From that tree: `npm ci && npm test`. Tree-mode runtime rebuilds bind `release/source-provenance.json` and refuse a tampered tree or a changed existing coordinate.
+
+## Intent events
+
+| Type | Executes? | Notes |
+|------|-----------|-------|
+| `flow:navigate-stage` | no | Stage exploration only |
+| `flow:save-proposal` | no | Draft idea from host UI |
+| `flow:start-intent` | no | Carries action-scoped snapshot with expiry; host must revalidate |
+| `flow:review-batch` | no | Opens shell review dialog |
+| `flow:toggle-map` | no | Branch map UX |
+| header/health/drafts | no | Host navigation hooks |
+
+## Forecast display
+
+Percent and ETA always render: typed forecast values when present, otherwise a labelled conservative fallback. Raw observations stay visible and may be missing. Freshness ages from `fresh_until` against now, not only a trusted `freshness` string. A host freshness caption cannot override a computed stale observation. A 100 percent guess is never completion; an evidenced `done` observation is labelled observed done. Stages: Aithema Defines, Paimos Builds, Pharos Delivers, Janus Access. Confirmation snapshots bind scope, digest, mode, action, evidence, and opaque host identity refs, then expire against the `now` passed at use. Review-dialog mode changes sync the footer select and refresh the displayed snapshot expiry without re-rendering the dialog.
+
+## Adapter boundary
+
+See `src/adapter.js` for the documented mapping from draft delivery-stream contracts to shell state. Validate upstream contracts with the delivery-contracts validator; this package does not embed that validator. The adapter maps closed operations to stages (Paimos test stays on Build; Pharos owns deploy/verify; Janus owns prepare/apply), prefers in-progress/blocked work over completed prerequisites, preserves exact batch/baseline/target/artifact refs, and maps artifact provenance observation time from the claim rather than document `evaluated_at`. A development target cannot populate a pass Pharos deployment gate. Janus preparation follows the validator: preliminary, ready, or live deployment targets may prepare; apply stays ready/live plus access. Identity plus digest without producing or imported evidence stays unknown. Define/Aithema stage completion resolves the baseline catalog entry and requirements-baseline gate evidence; a dangling `baseline_ref` alone cannot render performed. Missing provenance `evidence_ref` is not substituted with artifact identity. Future observation times stay unknown even for unvalidated documents. Batches without Pharos or Janus work do not borrow a document-global deployment target.
+
+Delivery `parties` are document claims, not runtime identity. Supply `identityContext` separately (`withIdentityContext` or `normalizeShellState({ ...mapped, identityContext })`) using a host-issued `inspr.flow-identity/0.1-draft` object. Opaque `host_id`-namespaced refs are verified by the host; display labels are untrusted; tokens, cookies, email, roles, and raw subjects are rejected. Example hosts are labelled fixtures and do not claim live identity.
+
+Hosts that feed `shellState` directly (not via `fromDeliveryContract`) must supply `delivery.stageEvidence` for each stage (`performed`, `not_in_batch`, or `unknown`). Completion markers read only that array; stage gates still read `prerequisites`. Omitting `stageEvidence` defaults every stage to `unknown`. Pass the same injected `now` you use for freshness and confirmation expiry through stage presentation and gate evaluation.
+
+## Non-blocking follow-ups
+
+- Native browser proof stays with the controller. This package uses the committed happy-dom harness only.
+- `getStageGate` still does not consult `evaluatedAt`; contract-sourced gates do not age; `resolveFreshness` has no max-age from `reported_at`; there is no timer, so freshness re-ages on a host push.
+- Conservative fallback can still print more than once on a missing-forecast line; past `estimated_finish` still clamps to `ETA ~0 min`.
+- Do not duplicate the Janus Paimos dependency reporter; a future stream producer should reuse it.
+- These documents and the shell remain claims and intent UI, not an auth or execution engine.
+- Artifact provenance and observation fields are unsigned claims. They are not authenticated runtime attestations.
+- Source-only fixture identity does not complete INSPR.2 or a real Zitadel host adapter.

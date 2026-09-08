@@ -1,0 +1,8 @@
+{
+  "fixture_version": "inspr.flow-identity-invalid-patch/0.1-draft",
+  "base": "../valid/labelled-local-host.json",
+  "expected_codes": ["FORBIDDEN_IDENTITY_MATERIAL"],
+  "operations": [
+    { "op": "add", "path": "/access_token", "value": "header.payload.signature" }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "contract_version": "inspr.delivery-stream/0.1-draft",
+  "evaluated_at": "2026-09-07T12:00:00Z",
+  "stream": {
+    "stream_ref": "stream_consultancy",
+    "project_kinds": ["iteration"]
+  },
+  "parties": [
+    {
+      "party_ref": "party_consultant",
+      "party_kind": "human",
+      "roles": ["requirements_approver", "batch_authorizer", "delivery_party", "operator", "acceptance_party"]
+    }
+  ],
+  "requirements_baselines": [
+    {
+      "baseline_ref": "baseline_advisory",
+      "revision": 1,
+      "content_digest": "sha256:16ae0941380964ae9267b0d9bad1df788bbdd71dc83e6e46856a284716c01eea",
+      "revision_seal": "sha256:07c6c40c326be33348be4f8d4f6575a11b065980f61728bb5422ebe830b45830",
+      "approved_by": "party_consultant",
+      "approved_at": "2026-09-07T09:00:00Z",
+      "requirements": [
+        {
+          "requirement_ref": "requirement_advisory",
+          "statement": "Document the agreed delivery approach for this engagement.",
+          "acceptance_criteria": ["The written approach names the authorized scope."],
+          "constraint_refs": []
+        }
+      ],
+      "constraints": []
+    }
+  ],
+  "targets": [],
+  "accounts": [],
+  "workers": [],
+  "harnesses": [],
+  "system_reporters": [],
+  "batches": [
+    {
+      "batch_ref": "batch_advisory",
+      "status": "in_progress",
+      "baseline": {
+        "baseline_ref": "baseline_advisory",
+        "content_digest": "sha256:16ae0941380964ae9267b0d9bad1df788bbdd71dc83e6e46856a284716c01eea",
+        "revision_seal": "sha256:07c6c40c326be33348be4f8d4f6575a11b065980f61728bb5422ebe830b45830"
+      },
+      "scope": {
+        "requirement_refs": ["requirement_advisory"],
+        "constraint_refs": [],
+        "task_refs": ["task_advisory"]
+      },
+      "tasks": [
+        {
+          "task_ref": "task_advisory",
+          "requirement_refs": ["requirement_advisory"],
+          "operation": "requirements",
+          "target_ref": null,
+          "status": "in_progress",
+          "completion_evidence_ref": null
+        }
+      ],
+      "operating_mode": "customer_operated",
+      "responsibilities": {
+        "delivery_party_ref": "party_consultant",
+        "operator_party_ref": "party_consultant",
+        "support_party_ref": null
+      },
+      "authorization": {
+        "authorization_ref": "authorization_advisory",
+        "decision": "start",
+        "selected_by": "party_consultant",
+        "selected_at": "2026-09-07T09:10:00Z",
+        "baseline": {
+          "baseline_ref": "baseline_advisory",
+          "content_digest": "sha256:16ae0941380964ae9267b0d9bad1df788bbdd71dc83e6e46856a284716c01eea",
+          "revision_seal": "sha256:07c6c40c326be33348be4f8d4f6575a11b065980f61728bb5422ebe830b45830"
+        },
+        "autonomy_mode": "manual",
+        "authority_scope": {
+          "requirement_refs": ["requirement_advisory"],
+          "constraint_refs": [],
+          "task_refs": ["task_advisory"],
+          "allowed_actions": ["document", "requirements"],
+          "data_classes": ["engagement_notes"],
+          "execution_locations": ["approved_local"],
+          "unattended_allowed": false,
+          "max_direct_cost": null,
+          "max_recurring_monthly_increase": null,
+          "change_control": {
+            "scope_expansion": "require_human_approval",
+            "risk_increase": "require_human_approval",
+            "data_processing_change": "require_human_approval",
+            "authority_change": "require_human_approval"
+          }
+        }
+      },
+      "assignments": [
+        {
+          "task_ref": "task_advisory",
+          "assignee_kind": "human",
+          "party_ref": "party_consultant"
+        }
+      ],
+      "prerequisite_gates": [
+        {
+          "gate_ref": "gate_requirements_advisory",
+          "gate_class": "technical",
+          "gate_kind": "requirements_baseline",
+          "target_ref": null,
+          "affected_task_refs": ["task_advisory"],
+          "status": "pass",
+          "observed_at": "2026-09-07T09:09:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_advisory_baseline"
+        }
+      ]
+    }
+  ],
+  "progress_reports": [
+    {
+      "report_ref": "progress_advisory",
+      "batch_ref": "batch_advisory",
+      "overall": {
+        "progress": {
+          "status": "in_progress",
+          "percent_complete": 20,
+          "eta": "2026-09-07T16:00:00Z",
+          "basis": { "kind": "manual_estimate", "evidence_ref": "evidence_advisory_notes" },
+          "reporter": { "kind": "human", "reporter_ref": "party_consultant" },
+          "reported_at": "2026-09-07T11:30:00Z",
+          "fresh_until": "2026-09-07T18:00:00Z",
+          "freshness": "fresh"
+        },
+        "forecast": {
+          "percent_complete": 20,
+          "estimated_finish": "2026-09-07T16:00:00Z",
+          "kind": "educated_guess",
+          "as_of": "2026-09-07T11:30:00Z",
+          "basis": { "kind": "manual_estimate", "evidence_ref": "evidence_advisory_forecast" },
+          "conditional_on": null,
+          "previous_target": null
+        }
+      },
+      "tasks": [
+        {
+          "task_ref": "task_advisory",
+          "progress": {
+            "status": "in_progress",
+            "percent_complete": 20,
+            "eta": "2026-09-07T16:00:00Z",
+            "basis": { "kind": "manual_estimate", "evidence_ref": "evidence_advisory_task_notes" },
+            "reporter": { "kind": "human", "reporter_ref": "party_consultant" },
+            "reported_at": "2026-09-07T11:30:00Z",
+            "fresh_until": "2026-09-07T18:00:00Z",
+            "freshness": "fresh"
+          },
+          "forecast": {
+            "percent_complete": 20,
+            "estimated_finish": "2026-09-07T16:00:00Z",
+            "kind": "educated_guess",
+            "as_of": "2026-09-07T11:30:00Z",
+            "basis": { "kind": "manual_estimate", "evidence_ref": "evidence_advisory_task_forecast" },
+            "conditional_on": null,
+            "previous_target": null
+          }
+        }
+      ]
+    }
+  ],
+  "releases": [],
+  "acceptances": [],
+  "advisory_risks": []
+}

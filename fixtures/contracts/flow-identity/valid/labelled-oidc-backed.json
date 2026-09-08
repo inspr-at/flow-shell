@@ -1,0 +1,28 @@
+{
+  "contract_version": "inspr.flow-identity/0.1-draft",
+  "evaluated_at": "2026-09-07T12:00:00Z",
+  "host_id": "host_fixture_b",
+  "principal_kind": "oidc_backed",
+  "principal_ref": "host_fixture_b:principal:opaque-operator",
+  "binding_ref": "host_fixture_b:binding:harbor-3",
+  "issuer_descriptor": {
+    "kind": "verified_issuer_descriptor",
+    "issuer_ref": "host_fixture_b:issuer:labelled-idp"
+  },
+  "organization_ref": "host_fixture_b:org:harbor-tenant",
+  "project_ref": "host_fixture_b:project:harbor",
+  "actor_kind": "human",
+  "issued_at": "2026-09-07T11:40:00Z",
+  "expires_at": "2026-09-07T19:40:00Z",
+  "fresh_until": "2026-09-07T12:20:00Z",
+  "context_revision": "host_fixture_b:ctxrev:7",
+  "authority_disclaimer": "Schema validity is not authentication. Host must issue this context from a verified principal and revalidate on every consequential intent.",
+  "display": {
+    "user_label": "Labelled OIDC-backed fixture",
+    "user_initials": "LO",
+    "project_label": "Harbor",
+    "organization_label": "Harbor tenant fixture",
+    "issuer_label": "Labelled issuer descriptor",
+    "fixture_label": "Labelled oidc-backed fixture. Host mapped issuer+subject server-side. No live identity."
+  }
+}

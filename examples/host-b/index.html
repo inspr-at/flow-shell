@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>INSPR Flow Shell · Host B</title>
+    <link rel="icon" href="../../src/assets/inspr-logo.svg" type="image/svg+xml">
+    <style>
+      body { margin: 0; background: #f5f8fa; color: #253b4b; font: 14px system-ui, sans-serif; }
+      .focus { max-width: 688px; margin: 0 auto; padding: 24px; }
+      .panel { margin-top: 20px; padding: 14px 16px; border: 1px solid #d8e3e9; border-radius: 12px; background: rgba(255,255,255,.7); font-size: 12px; color: #627581; }
+    </style>
+  </head>
+  <body>
+    <inspr-flow-shell logo-src="../../src/assets/inspr-logo.svg">
+      <section class="focus">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1.9px;color:#8c7747">HOST B · RUNNING / STALE · NO HOST IDENTITY CONTEXT · NO LIVE IDENTITY</p>
+        <h1 style="font-size:clamp(28px,3vw,42px);letter-spacing:-1px">Delivery underway.</h1>
+        <p style="color:#627581;line-height:1.7">Independent host B uses the same package with different state. This example is unauthenticated on purpose: read-only navigation still works; consequential start stays blocked. Forecast percentages stay visible; stale observations stop live animation even if a host freshness string still says fresh.</p>
+        <div id="host-panel" class="panel">Waiting for shell intents…</div>
+      </section>
+    </inspr-flow-shell>
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

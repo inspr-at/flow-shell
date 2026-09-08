@@ -1,0 +1,22 @@
+{
+  "contract_version": "inspr.flow-identity/0.1-draft",
+  "evaluated_at": "2026-09-07T12:00:00Z",
+  "host_id": "host_fixture_a",
+  "principal_kind": "local_host",
+  "principal_ref": "host_fixture_a:principal:agent-worker",
+  "binding_ref": "host_fixture_a:binding:agent-1",
+  "organization_ref": null,
+  "project_ref": "host_fixture_a:project:northstar",
+  "actor_kind": "agent",
+  "issued_at": "2026-09-07T11:55:00Z",
+  "expires_at": "2026-09-07T20:00:00Z",
+  "fresh_until": "2026-09-07T12:10:00Z",
+  "context_revision": "host_fixture_a:ctxrev:agent-1",
+  "authority_disclaimer": "Schema validity is not authentication. Host must issue this context from a verified principal and revalidate on every consequential intent.",
+  "display": {
+    "user_label": "Labelled agent fixture",
+    "user_initials": "AG",
+    "project_label": "Northstar",
+    "fixture_label": "Labelled local-host agent fixture. No live identity."
+  }
+}

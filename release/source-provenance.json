@@ -1,0 +1,9 @@
+{
+  "schema": "inspr-flow-shell-source-provenance/0.1",
+  "private_source_commit": "21fadabfa7eccedfd58ace5b8177e87a954d63bb",
+  "current_source_commit": "21fadabfa7eccedfd58ace5b8177e87a954d63bb",
+  "export_mtime_epoch": 1788838680,
+  "runtime_tree_digest": "sha256:ef8a6d3f62ace5e09fe34c88ba48919b864fe88394d8859ff0582a149a12b18e",
+  "lock_digest": "sha256:a13e2e5463e9fef98b8d8ac31280d5f051bf517d157847918f6861e4eaf47661",
+  "normalization_note": "private_source_commit is lineage from the original private export. current_source_commit is the Git commit actually exported. runtime_tree_digest uses the path+blob-sha inventory; it is not a Git tree object id."
+}

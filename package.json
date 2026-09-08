@@ -1,0 +1,39 @@
+{
+  "name": "@inspr/flow-shell",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "description": "Reusable INSPR delivery shell: header, branch footer, intent boundary.",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": "./src/inspr-flow-shell.js",
+    "./package.json": "./package.json",
+    "./adapter": "./src/adapter.js",
+    "./identity": "./src/identity.js",
+    "./intents": "./src/intents.js",
+    "./state": "./src/state.js",
+    "./assets/inspr-logo.svg": "./src/assets/inspr-logo.svg"
+  },
+  "files": [
+    "LICENSE",
+    "NOTICES.json",
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    "src",
+    "examples"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:packaging": "node --test test/packaging.test.js",
+    "test:source-export": "node --test test/source-export.test.js",
+    "release:build": "node release/build-release.mjs",
+    "source:export": "node release/build-source.mjs"
+  },
+  "devDependencies": {
+    "happy-dom": "^19.0.2"
+  }
+}

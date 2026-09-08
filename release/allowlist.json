@@ -1,0 +1,25 @@
+{
+  "description": "Closed inventory for the @inspr/flow-shell runtime tarball. Only tracked Git blobs at the build commit are exported; never the operator working tree, doctrine, or sibling contracts.",
+  "paths": [
+    "LICENSE",
+    "NOTICES.json",
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    "examples/",
+    "src/"
+  ],
+  "forbidden_patterns": [
+    "^\\.env",
+    "^node_modules/",
+    "^dist/",
+    "^test/",
+    "^release/",
+    "^fixtures/",
+    "^AGENTS\\.md$",
+    "worker-result",
+    "\\.age$",
+    "^\\.git/",
+    "doctrine"
+  ]
+}

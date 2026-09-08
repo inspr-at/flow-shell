@@ -1,0 +1,479 @@
+{
+  "contract_version": "inspr.delivery-stream/0.1-draft",
+  "evaluated_at": "2026-09-07T12:30:00Z",
+  "stream": {
+    "stream_ref": "stream_sample_product",
+    "project_kinds": [
+      "new_product",
+      "iteration",
+      "integration"
+    ]
+  },
+  "parties": [
+    {
+      "party_ref": "party_customer",
+      "party_kind": "human",
+      "roles": [
+        "requirements_approver",
+        "batch_authorizer",
+        "operator",
+        "acceptance_party"
+      ]
+    },
+    {
+      "party_ref": "party_delivery",
+      "party_kind": "organization",
+      "roles": [
+        "delivery_party",
+        "acceptance_party"
+      ]
+    }
+  ],
+  "requirements_baselines": [
+    {
+      "baseline_ref": "baseline_7",
+      "revision": 7,
+      "content_digest": "sha256:01f24f301dd4aafe5a8be77c62b8854dda5115e7a87bd90d2804607415dce770",
+      "revision_seal": "sha256:092b22f9eeb0230161e69abe14b862aaeecee2f22dd441d4a85b442929fa0e10",
+      "approved_by": "party_customer",
+      "approved_at": "2026-09-07T09:00:00Z",
+      "requirements": [
+        {
+          "requirement_ref": "requirement_preview",
+          "statement": "Provide a reviewable product preview.",
+          "acceptance_criteria": [
+            "The selected change is visible in the preview."
+          ],
+          "constraint_refs": [
+            "constraint_data",
+            "constraint_authority"
+          ]
+        },
+        {
+          "requirement_ref": "requirement_launch",
+          "statement": "Apply the accepted release to the selected target.",
+          "acceptance_criteria": [
+            "The exact artifact digest is recorded for the target."
+          ],
+          "constraint_refs": [
+            "constraint_authority"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "constraint_ref": "constraint_data",
+          "kind": "data",
+          "statement": "Use synthetic data for preview validation."
+        },
+        {
+          "constraint_ref": "constraint_authority",
+          "kind": "authority",
+          "statement": "Stop before expanding scope, risk, data processing, or authority."
+        }
+      ]
+    }
+  ],
+  "targets": [
+    {
+      "target_ref": "target_dev_ready",
+      "kind": "development",
+      "readiness": "ready",
+      "observed_at": "2026-09-07T09:05:00Z",
+      "fresh_until": "2026-09-07T13:00:00Z",
+      "evidence_ref": "evidence_dev_profile_12"
+    },
+    {
+      "target_ref": "target_prod_ready",
+      "kind": "deployment",
+      "readiness": "ready",
+      "observed_at": "2026-09-07T09:06:00Z",
+      "fresh_until": "2026-09-07T13:00:00Z",
+      "evidence_ref": "evidence_target_4"
+    }
+  ],
+  "accounts": [
+    {
+      "account_ref": "account_primary",
+      "allowance_observation": {
+        "remaining": null,
+        "resets_at": null,
+        "observed_at": "2026-09-07T09:07:00Z"
+      }
+    }
+  ],
+  "workers": [
+    {
+      "worker_ref": "worker_builder_1"
+    }
+  ],
+  "harnesses": [
+    {
+      "harness_ref": "harness_cli_1",
+      "model_facts": [
+        {
+          "model_ref": "model_general_1",
+          "efforts": [
+            "medium",
+            "high"
+          ],
+          "status": "supported",
+          "observed_at": "2026-09-07T09:08:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_model_probe_8"
+        }
+      ],
+      "steering_facts": [
+        {
+          "capability": "message_receipt",
+          "status": "supported",
+          "observed_at": "2026-09-07T09:08:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_receipt_probe_8"
+        },
+        {
+          "capability": "heartbeat",
+          "status": "supported",
+          "observed_at": "2026-09-07T09:08:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_heartbeat_probe_8"
+        },
+        {
+          "capability": "steer",
+          "status": "supported",
+          "observed_at": "2026-09-07T09:08:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_steer_probe_8"
+        },
+        {
+          "capability": "stop",
+          "status": "supported",
+          "observed_at": "2026-09-07T09:08:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_stop_probe_8"
+        }
+      ]
+    }
+  ],
+  "system_reporters": [
+    {
+      "reporter_ref": "reporter_orchestrator"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_ref": "artifact_web_42",
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "provenance": {
+        "origin": "imported",
+        "producing_task_ref": null,
+        "import_receipt_ref": "receipt_existing_web_42",
+        "observed_at": "2026-09-07T11:00:00Z",
+        "evidence_ref": "evidence_import_receipt_42"
+      }
+    },
+    {
+      "artifact_ref": "artifact_web_other",
+      "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "provenance": {
+        "origin": "imported",
+        "producing_task_ref": null,
+        "import_receipt_ref": "receipt_vendor_web_other",
+        "observed_at": "2026-09-07T11:00:00Z",
+        "evidence_ref": "evidence_import_receipt_other"
+      }
+    }
+  ],
+  "batches": [
+    {
+      "batch_ref": "batch_pending_deploy",
+      "status": "authorized",
+      "baseline": {
+        "baseline_ref": "baseline_7",
+        "content_digest": "sha256:01f24f301dd4aafe5a8be77c62b8854dda5115e7a87bd90d2804607415dce770",
+        "revision_seal": "sha256:092b22f9eeb0230161e69abe14b862aaeecee2f22dd441d4a85b442929fa0e10"
+      },
+      "scope": {
+        "requirement_refs": [
+          "requirement_preview",
+          "requirement_launch"
+        ],
+        "constraint_refs": [
+          "constraint_data",
+          "constraint_authority"
+        ],
+        "task_refs": [
+          "task_build",
+          "task_deploy"
+        ]
+      },
+      "tasks": [
+        {
+          "task_ref": "task_build",
+          "requirement_refs": [
+            "requirement_preview"
+          ],
+          "operation": "build",
+          "target_ref": null,
+          "status": "pending",
+          "completion_evidence_ref": null
+        },
+        {
+          "task_ref": "task_deploy",
+          "requirement_refs": [
+            "requirement_launch"
+          ],
+          "operation": "deploy",
+          "target_ref": "target_prod_ready",
+          "artifact_ref": null,
+          "status": "pending",
+          "completion_evidence_ref": null
+        }
+      ],
+      "operating_mode": "agency_supported",
+      "responsibilities": {
+        "delivery_party_ref": "party_delivery",
+        "operator_party_ref": "party_customer",
+        "support_party_ref": "party_delivery"
+      },
+      "authorization": {
+        "authorization_ref": "authorization_pending_deploy",
+        "decision": "start",
+        "selected_by": "party_customer",
+        "selected_at": "2026-09-07T09:10:00Z",
+        "baseline": {
+          "baseline_ref": "baseline_7",
+          "content_digest": "sha256:01f24f301dd4aafe5a8be77c62b8854dda5115e7a87bd90d2804607415dce770",
+          "revision_seal": "sha256:092b22f9eeb0230161e69abe14b862aaeecee2f22dd441d4a85b442929fa0e10"
+        },
+        "autonomy_mode": "automatic",
+        "authority_scope": {
+          "requirement_refs": [
+            "requirement_preview",
+            "requirement_launch"
+          ],
+          "constraint_refs": [
+            "constraint_data",
+            "constraint_authority"
+          ],
+          "task_refs": [
+            "task_build",
+            "task_deploy"
+          ],
+          "allowed_actions": [
+            "build",
+            "deploy"
+          ],
+          "allowed_target_refs": [
+            "target_prod_ready"
+          ],
+          "allowed_artifact_refs": [
+            "artifact_web_42"
+          ],
+          "data_classes": [
+            "synthetic"
+          ],
+          "execution_locations": [
+            "approved_local",
+            "approved_target"
+          ],
+          "unattended_allowed": true,
+          "max_direct_cost": {
+            "amount": 100,
+            "currency": "EUR"
+          },
+          "max_recurring_monthly_increase": {
+            "amount": 20,
+            "currency": "EUR"
+          },
+          "change_control": {
+            "scope_expansion": "require_human_approval",
+            "risk_increase": "require_human_approval",
+            "data_processing_change": "require_human_approval",
+            "authority_change": "require_human_approval"
+          }
+        }
+      },
+      "assignments": [
+        {
+          "task_ref": "task_build",
+          "assignee_kind": "agent",
+          "worker_ref": "worker_builder_1",
+          "account_ref": "account_primary",
+          "harness_ref": "harness_cli_1",
+          "execution_target_ref": "target_dev_ready",
+          "model_ref": "model_general_1",
+          "effort": "high",
+          "required_steering_capabilities": [
+            "message_receipt",
+            "heartbeat",
+            "steer",
+            "stop"
+          ]
+        },
+        {
+          "task_ref": "task_deploy",
+          "assignee_kind": "agent",
+          "worker_ref": "worker_builder_1",
+          "account_ref": "account_primary",
+          "harness_ref": "harness_cli_1",
+          "execution_target_ref": "target_dev_ready",
+          "model_ref": "model_general_1",
+          "effort": "high",
+          "required_steering_capabilities": [
+            "message_receipt",
+            "heartbeat",
+            "steer",
+            "stop"
+          ]
+        }
+      ],
+      "prerequisite_gates": [
+        {
+          "gate_ref": "gate_requirements_deploy",
+          "gate_class": "technical",
+          "gate_kind": "requirements_baseline",
+          "target_ref": null,
+          "affected_task_refs": [
+            "task_build",
+            "task_deploy"
+          ],
+          "status": "pass",
+          "observed_at": "2026-09-07T09:09:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_baseline_42"
+        },
+        {
+          "gate_ref": "gate_dev_deploy",
+          "gate_class": "technical",
+          "gate_kind": "development_machine",
+          "target_ref": "target_dev_ready",
+          "affected_task_refs": [
+            "task_build",
+            "task_deploy"
+          ],
+          "status": "pass",
+          "observed_at": "2026-09-07T09:09:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_dev_gate_42"
+        },
+        {
+          "gate_ref": "gate_target_deploy",
+          "gate_class": "technical",
+          "gate_kind": "target_readiness",
+          "target_ref": "target_prod_ready",
+          "affected_task_refs": [
+            "task_deploy"
+          ],
+          "status": "pass",
+          "observed_at": "2026-09-07T09:09:00Z",
+          "fresh_until": "2026-09-07T13:00:00Z",
+          "evidence_ref": "evidence_target_gate_42"
+        }
+      ]
+    }
+  ],
+  "progress_reports": [
+    {
+      "report_ref": "progress_pending_deploy",
+      "batch_ref": "batch_pending_deploy",
+      "overall": {
+        "progress": {
+          "status": "pending",
+          "percent_complete": null,
+          "eta": null,
+          "basis": {
+            "kind": "unknown",
+            "evidence_ref": null
+          },
+          "reporter": {
+            "kind": "system",
+            "reporter_ref": "reporter_orchestrator"
+          },
+          "reported_at": "2026-09-07T12:20:00Z",
+          "fresh_until": "2026-09-07T12:40:00Z",
+          "freshness": "fresh"
+        },
+        "forecast": {
+          "percent_complete": 20,
+          "estimated_finish": "2026-09-07T12:55:00Z",
+          "kind": "worker_estimate",
+          "as_of": "2026-09-07T12:20:00Z",
+          "basis": {
+            "kind": "work_breakdown",
+            "evidence_ref": "evidence_deploy_overall_forecast"
+          },
+          "conditional_on": null,
+          "previous_target": null
+        }
+      },
+      "tasks": [
+        {
+          "task_ref": "task_build",
+          "progress": {
+            "status": "pending",
+            "percent_complete": null,
+            "eta": null,
+            "basis": {
+              "kind": "unknown",
+              "evidence_ref": null
+            },
+            "reporter": {
+              "kind": "worker",
+              "reporter_ref": "worker_builder_1"
+            },
+            "reported_at": "2026-09-07T12:10:00Z",
+            "fresh_until": "2026-09-07T12:40:00Z",
+            "freshness": "fresh"
+          },
+          "forecast": {
+            "percent_complete": 10,
+            "estimated_finish": "2026-09-07T12:10:00Z",
+            "kind": "worker_estimate",
+            "as_of": "2026-09-07T12:10:00Z",
+            "basis": {
+              "kind": "worker_assessment",
+              "evidence_ref": "evidence_build_forecast_42"
+            },
+            "conditional_on": null,
+            "previous_target": null
+          }
+        },
+        {
+          "task_ref": "task_deploy",
+          "progress": {
+            "status": "pending",
+            "percent_complete": null,
+            "eta": null,
+            "basis": {
+              "kind": "unknown",
+              "evidence_ref": null
+            },
+            "reporter": {
+              "kind": "worker",
+              "reporter_ref": "worker_builder_1"
+            },
+            "reported_at": "2026-09-07T12:20:00Z",
+            "fresh_until": "2026-09-07T12:40:00Z",
+            "freshness": "fresh"
+          },
+          "forecast": {
+            "percent_complete": 5,
+            "estimated_finish": "2026-09-07T12:50:00Z",
+            "kind": "worker_estimate",
+            "as_of": "2026-09-07T12:20:00Z",
+            "basis": {
+              "kind": "worker_assessment",
+              "evidence_ref": "evidence_deploy_forecast"
+            },
+            "conditional_on": null,
+            "previous_target": null
+          }
+        }
+      ]
+    }
+  ],
+  "releases": [],
+  "acceptances": [],
+  "advisory_risks": []
+}

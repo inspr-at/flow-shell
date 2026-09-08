@@ -1,0 +1,109 @@
+{
+  "schema": "inspr-flow-shell-publication-inventory/0.1",
+  "package": "@inspr/flow-shell",
+  "version_scheme": "legacy-semver-public",
+  "version": "0.1.1",
+  "public_repository_target": null,
+  "package_registry": {
+    "publish": false,
+    "npm_private_flag": true,
+    "namespace_claim": false,
+    "note": "package.json private remains the npm publish guard. This coordinate does not claim the @inspr npm namespace and is not an npm or GitHub publication."
+  },
+  "release_channels": {
+    "runtime_package": "candidate-runtime-tgz",
+    "public_source_candidate": "candidate-source"
+  },
+  "exports": {
+    "runtime_package": {
+      "allowlist": "release/allowlist.json",
+      "builder": "release/build-release.mjs",
+      "script": "release:build",
+      "output_dir_pattern": "dist/inspr-flow-shell-{version}/",
+      "artifact_pattern": "inspr-flow-shell-{version}.tgz",
+      "manifest_pattern": "inspr-flow-shell-{version}.manifest.json"
+    },
+    "public_source_candidate": {
+      "allowlist": "release/source-allowlist.json",
+      "builder": "release/build-source.mjs",
+      "script": "source:export",
+      "output_dir_pattern": "dist/inspr-flow-shell-source-{version}/",
+      "artifact_pattern": "inspr-flow-shell-source-{version}.tgz",
+      "manifest_pattern": "inspr-flow-shell-source-{version}.manifest.json"
+    }
+  },
+  "excluded_from_public_source": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "VISION.md",
+    "umbrella README",
+    "doctrine/",
+    "doctrine-private/",
+    "worker-result.txt",
+    ".env",
+    "node_modules/",
+    "dist/",
+    "private Git history and remotes",
+    "delivery contract validators and unused invalid delivery patches",
+    "frozen identity/delivery schema bytes beyond curated synthetic fixtures needed by package tests"
+  ],
+  "included_in_public_source": [
+    "LICENSE",
+    "NOTICES.json",
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    ".gitignore",
+    "dev-server.py",
+    "examples/",
+    "src/",
+    "test/",
+    "release/",
+    "curated synthetic fixtures/contracts/"
+  ],
+  "test_prerequisites": {
+    "node": "24",
+    "npm": "lockfile-pinned",
+    "system": [
+      "tar",
+      "git (private export builder only; extracted source tests must not require private history)",
+      "trash CLI optional for packaging cleanup; tests retain owned temp residue with a bounded warning when it is absent and never rm"
+    ]
+  },
+  "reproducibility": {
+    "canonical_toolchain": {
+      "ci_runner": "ubuntu-latest",
+      "node": "24",
+      "tar_family": "gnu",
+      "tar_format": "gnu",
+      "timestamp_policy": "git-committer-epoch-seconds"
+    },
+    "boundary": "Published bytes are reproducible under the canonical GNU tar toolchain. BSD tar may emit different archive bytes for the same tree; local macOS builds are valid for development but are not the publication basis.",
+    "runtime_manifest_schema": "inspr-flow-shell-release-manifest/0.1"
+  },
+  "release_lineage": {
+    "prototype": {
+      "version": "0.0.0",
+      "status": "preserved-prototype",
+      "note": "The 0.0.0 prototype remains in Git history. First explicit legacy SemVer public coordinate was local 0.1.0; it is a superseded unpublished candidate whose dist artifacts stay immutable. This is not a calendar-version migration."
+    },
+    "superseded_unpublished_candidate": {
+      "version": "0.1.0",
+      "status": "superseded-unpublished-local",
+      "note": "Local 0.1.0 runtime/source artifacts in dist/inspr-flow-shell-0.1.0/ and dist/inspr-flow-shell-source-0.1.0/ must not be overwritten or repacked."
+    },
+    "prepared_candidate": {
+      "version": "0.1.1",
+      "status": "local-source-candidate",
+      "note": "Corrected local runtime tarball and source export only. Root review owns any later clean public repository, tag, or publication. Existing Aithema 0.1.0/0.2.0 artifacts are untouched. Local 0.1.0 remains immutable and unpublished."
+    }
+  },
+  "outstanding_coordinator_gates": [
+    "Root independently reviews the exact committed source and clean export before any publication",
+    "No private umbrella visibility change, private Git history push, npm publish, tag, or remote create",
+    "Package registry publication remains unauthorized; this coordinate does not claim the @inspr npm namespace",
+    "Native browser proof, exact Claude inspection, and public repository creation remain root-owned",
+    "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched",
+    "Local unpublished 0.1.0 dist artifacts remain immutable and must not be overwritten"
+  ]
+}

@@ -59,6 +59,7 @@ export function createTempRepo(prefix = 'flow-shell-pack-fixture-') {
 
 function shouldCopy(src) {
   const rel = src.slice(packageRoot.length).replace(/\\/g, '/');
+  if (rel === '/.git' || rel.startsWith('/.git/')) return false;
   if (rel.includes('/node_modules') || rel.endsWith('/node_modules')) return false;
   if (rel.includes('/dist/') || rel.endsWith('/dist')) return false;
   if (rel.endsWith('/release/source-provenance.json')) return false;

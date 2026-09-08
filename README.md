@@ -2,7 +2,7 @@
 
 Reusable INSPR delivery shell: compact identity header, branch-map footer, and an explicit intent boundary for host applications.
 
-PPM: **INSPR-380** packages the INSPR-375/INSPR-379 accepted shell for independent host consumption. This is a **0.1.1 local source/runtime candidate** (`legacy-semver-public`), not a public repository, tag, or npm publication. Local **0.1.0** remains an immutable superseded unpublished candidate in `dist/`; do not overwrite or repack it. `private: true` remains the npm publish guard and does not claim the `@inspr` npm namespace.
+PPM: **INSPR-380** packages the INSPR-375/INSPR-379 accepted shell for independent host consumption. This tree prepares legacy SemVer **`0.1.1`** (`legacy-semver-public`) for the proposed public repository **[inspr-at/flow-shell](https://github.com/inspr-at/flow-shell)**. The repository, tag, and GitHub Release assets do not exist yet; root owns creation and publication. Local **0.1.0** remains an immutable superseded unpublished candidate outside this public channel. `private: true` remains the npm publish guard and does not claim the `@inspr` npm namespace.
 
 Original work is licensed under **AGPL-3.0-only**. See `LICENSE` and `NOTICES.json`. Third-party test tooling keeps its own licenses. This candidate does not relicense anything.
 
@@ -63,18 +63,13 @@ npm test
 
 Node 24 built-in test runner only. `happy-dom` is a locked development dependency for the committed harness; it is not a runtime dependency.
 
-## Packaging candidate
+## Packaging and public release
 
-Local only. Root review owns any later public repository, tag, or publication. Do not `npm publish`, create a tag, or push this private umbrella.
+`npm run release:build` publishes one immutable runtime coordinate under `dist/inspr-flow-shell-0.1.1/` (`inspr-flow-shell-0.1.1.tgz` + sidecar manifest) from the closed allowlist in `release/allowlist.json`. `npm run source:export` publishes `dist/inspr-flow-shell-source-0.1.1/` (`inspr-flow-shell-source-0.1.1.tgz` + sidecar manifest) with tests, release tooling, CI workflows, and curated synthetic contract fixtures. Canonical published bytes use GNU tar + Node 24 with Git committer-epoch timestamps; local BSD tar builds are valid for development and are not claimed byte-identical.
 
-```sh
-npm run release:build
-npm run source:export
-```
+Publication inventory, coordinator gates, and the artifact contract live in `release/publication-inventory.json`. CI runs `npm test` on `main` and pull requests (`.github/workflows/ci.yml`). Release admission is manual `workflow_dispatch` with an explicit version coordinate (`.github/workflows/release.yml`). Dispatch it from `main` for an ephemeral admission run, or from tag `v0.1.1` / `0.1.1` when the checkout is exactly that tagged commit so forge retention can publish immutable GitHub Release assets. The release workflow runs `npm test`, builds runtime + source exports, proves installed runtime and extracted source consumers (`release/admit-consumer-proof.mjs`), verifies manifest/commit binding (`release/admit-release.mjs`), uploads ephemeral transfer artifacts, and retains forge assets only on a matching version tag. `upload-artifact` is transfer only, not publication evidence. This coordinate is not an npm registry publication; install hosts from the GitHub Release runtime tarball or from a Git checkout / extracted source tree.
 
-`release:build` writes one immutable runtime coordinate under `dist/inspr-flow-shell-0.1.1/` (npm tarball + sidecar manifest) from the closed allowlist in `release/allowlist.json`. `source:export` writes `dist/inspr-flow-shell-source-0.1.1/` with tests, release tooling, license notices, and the curated synthetic contract fixtures needed by those tests. Canonical published bytes are GNU tar + Node 24 with Git committer-epoch timestamps; local BSD tar builds are valid for development and are not claimed byte-identical. Provenance records opaque commit SHAs and tree/lock digests only. Packaging tests retain owned temp residue with a bounded warning if the `trash` CLI is absent; they never `rm`.
-
-Extracted source has `package.json` at the tree root. From that tree: `npm ci && npm test`. Tree-mode runtime rebuilds bind `release/source-provenance.json` and refuse a tampered tree or a changed existing coordinate.
+From a public Git checkout or extracted non-Git source tree: `npm ci && npm test`. Tree-mode runtime rebuilds bind `release/source-provenance.json` and refuse a tampered tree or a changed existing coordinate. `private_source_commit` records opaque original lineage; `current_source_commit` is the actual public Git commit exported.
 
 ## Intent events
 

@@ -3,16 +3,16 @@
   "package": "@inspr/flow-shell",
   "version_scheme": "legacy-semver-public",
   "version": "0.1.1",
-  "public_repository_target": null,
+  "public_repository_target": "inspr-at/flow-shell",
   "package_registry": {
     "publish": false,
     "npm_private_flag": true,
     "namespace_claim": false,
-    "note": "package.json private remains the npm publish guard. This coordinate does not claim the @inspr npm namespace and is not an npm or GitHub publication."
+    "note": "package.json private remains the npm publish guard. GitHub source and runtime tgz availability is independent and does not claim the @inspr npm namespace."
   },
   "release_channels": {
-    "runtime_package": "candidate-runtime-tgz",
-    "public_source_candidate": "candidate-source"
+    "runtime_package": "github-runtime-tgz",
+    "public_source_candidate": "github-source"
   },
   "exports": {
     "runtime_package": {
@@ -54,6 +54,7 @@
     "package.json",
     "package-lock.json",
     ".gitignore",
+    ".github/workflows/",
     "dev-server.py",
     "examples/",
     "src/",
@@ -69,6 +70,16 @@
       "git (private export builder only; extracted source tests must not require private history)",
       "trash CLI optional for packaging cleanup; tests retain owned temp residue with a bounded warning when it is absent and never rm"
     ]
+  },
+  "ci": {
+    "continuous": ".github/workflows/ci.yml",
+    "release_admission": ".github/workflows/release.yml",
+    "release_trigger": "workflow_dispatch with explicit version coordinate from main or an exact version tag checkout",
+    "release_gates": "npm test, runtime/source build, admit-consumer-proof, admit-release manifest/commit binding; main CI success alone is not a release gate",
+    "auto_publish_on_push": false,
+    "ephemeral_transfer": "actions/upload-artifact is CI transfer only, not publication evidence",
+    "retained_forge_assets": "GitHub Release assets on refs/tags/{version} or refs/tags/v{version} via release/retain-forge-assets.mjs; tag target must equal checked-out commit; only the four declared asset names are allowed and extras/duplicates are refused; mismatched tags are refused before forge I/O; identical re-runs are idempotent and changed bytes are refused",
+    "canonical_toolchain_enforcement": "FLOW_SHELL_CANONICAL_RELEASE=1 on the release workflow; local BSD tar builds remain valid and are not byte-identical to GNU tar"
   },
   "reproducibility": {
     "canonical_toolchain": {
@@ -94,16 +105,20 @@
     },
     "prepared_candidate": {
       "version": "0.1.1",
-      "status": "local-source-candidate",
-      "note": "Corrected local runtime tarball and source export only. Root review owns any later clean public repository, tag, or publication. Existing Aithema 0.1.0/0.2.0 artifacts are untouched. Local 0.1.0 remains immutable and unpublished."
+      "status": "metadata-prepared",
+      "note": "Public repository metadata and CI/release automation prepared for inspr-at/flow-shell. Root owns repository creation, hosted CI proof, tag v0.1.1, and GitHub Release asset publication."
     }
   },
   "outstanding_coordinator_gates": [
-    "Root independently reviews the exact committed source and clean export before any publication",
-    "No private umbrella visibility change, private Git history push, npm publish, tag, or remote create",
+    "Root creates inspr-at/flow-shell, pushes this history, merges to main, and runs hosted CI before tagging",
+    "Root-owned tag v0.1.1, dispatched forge publication, and native browser proof",
     "Package registry publication remains unauthorized; this coordinate does not claim the @inspr npm namespace",
-    "Native browser proof, exact Claude inspection, and public repository creation remain root-owned",
-    "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched",
-    "Local unpublished 0.1.0 dist artifacts remain immutable and must not be overwritten"
-  ]
+    "Local unpublished 0.1.0 dist artifacts remain immutable and must not be overwritten",
+    "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched"
+  ],
+  "handoff": {
+    "review_extract": "npm run source:export && mkdir -p /tmp/flow-shell-source-review && tar -xzf dist/inspr-flow-shell-source-0.1.1/inspr-flow-shell-source-0.1.1.tgz -C /tmp/flow-shell-source-review",
+    "review_verify": "cd /tmp/flow-shell-source-review && npm ci && npm test && npm run release:build",
+    "provenance_note": "private_source_commit is original opaque lineage from the reviewed source export. current_source_commit is the Git commit actually exported from the public repository. Runtime artifact manifests bind source.commit to current_source_commit under frozen schema 0.1."
+  }
 }

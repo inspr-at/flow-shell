@@ -175,7 +175,7 @@ describe('INSPR-380 runtime packaging', () => {
       assert.equal(built.manifest.version, VERSION);
       assert.equal(built.manifest.version_scheme, LEGACY_SEMVER_PUBLIC);
       assert.equal(built.manifest.private, true);
-      assert.equal(built.manifest.release_channel, 'candidate-runtime-tgz');
+      assert.equal(built.manifest.release_channel, 'github-runtime-tgz');
       assert.match(built.manifest.source.commit, /^[0-9a-f]{40}$/);
       assert.equal(built.manifest.source.commit.includes('/'), false);
       verifyReleasePair(built.releaseDir, MANIFEST_NAME);

@@ -2,6 +2,7 @@
   "description": "Closed inventory for the @inspr/flow-shell source candidate. Package paths are relative to this package. Curated synthetic contract fixtures are copied from frozen sibling contracts during Git-mode export and already live under fixtures/contracts/ in an extracted tree.",
   "paths": [
     ".gitignore",
+    ".github/workflows/",
     "LICENSE",
     "NOTICES.json",
     "README.md",

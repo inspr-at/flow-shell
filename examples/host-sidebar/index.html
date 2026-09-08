@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>INSPR Flow Shell · Sidebar host</title>
+    <link rel="icon" href="../../src/assets/inspr-logo.svg" type="image/svg+xml">
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        background: #eef3f6;
+        color: #253b4b;
+        font: 14px system-ui, sans-serif;
+      }
+      .sidebar {
+        flex: 0 0 48px;
+        background: linear-gradient(180deg, #284b62, #1d3a4d);
+        color: #d8e6ee;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        transition: flex-basis 0.2s ease;
+      }
+      body.sidebar-expanded .sidebar {
+        flex-basis: 230px;
+        writing-mode: horizontal-tb;
+        transform: none;
+      }
+      .content {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      inspr-flow-shell {
+        display: block;
+        width: 100%;
+        min-height: 100dvh;
+      }
+      .focus {
+        max-width: 688px;
+        margin: 0 auto;
+        padding: 24px 20px;
+      }
+      .panel {
+        margin-top: 20px;
+        padding: 14px 16px;
+        border: 1px solid #d8e3e9;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        color: #627581;
+        line-height: 1.6;
+      }
+      #tall-scroll-fixture {
+        min-height: 2000px;
+        margin-top: 24px;
+        padding: 16px;
+        border: 1px dashed #c5d5de;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.45);
+        color: #627581;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .controls button {
+        border: 1px solid #c5d5de;
+        background: #f9fbfc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font: inherit;
+        color: #284b62;
+      }
+      #intent-log {
+        font: 11px ui-monospace, monospace;
+        max-height: 160px;
+        overflow: auto;
+        padding-left: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Application navigation">NAV</aside>
+    <main class="content">
+      <inspr-flow-shell layout-mode="bounded" logo-src="../../src/assets/inspr-logo.svg">
+        <section class="focus">
+          <p style="font-size:10px;font-weight:700;letter-spacing:1.9px;color:#8c7747">SIDEBAR HOST · BOUNDED LAYOUT · 390px MOBILE COLUMN</p>
+          <h1 style="font-size:clamp(22px,4vw,36px);letter-spacing:-0.6px">Flow in a bounded content column.</h1>
+          <p style="color:#627581;line-height:1.7">This fixture mirrors a sidebar host such as Paimos. Set <code>layout-mode="bounded"</code> so the footer stays viewport-fixed vertically while horizontal bounds track the shell column. Scroll the tall block below to confirm the footer remains visible at the viewport bottom.</p>
+          <div class="panel" id="host-panel">Waiting for layout metrics…</div>
+          <div class="controls">
+            <button type="button" id="sidebar-toggle">Toggle sidebar width</button>
+            <button type="button" id="scroll-top">Scroll to top</button>
+            <button type="button" id="scroll-mid">Scroll to middle</button>
+            <button type="button" id="scroll-bottom">Scroll to bottom</button>
+          </div>
+          <div id="tall-scroll-fixture">
+            <p>Tall scroll fixture (2000px). Footer should stay viewport-fixed at the bottom while you scroll this content.</p>
+            <p>At 390px viewport the content column is 342px wide with a 48px sidebar rail. Expand the sidebar to approximate desktop geometry.</p>
+          </div>
+          <h2 style="font-size:13px;margin-top:28px">Intent log</h2>
+          <ol id="intent-log"></ol>
+        </section>
+      </inspr-flow-shell>
+    </main>
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

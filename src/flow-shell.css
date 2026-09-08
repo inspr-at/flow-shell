@@ -9,10 +9,19 @@
   --shell-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --shell-display: ui-rounded, 'Avenir Next', 'Segoe UI', sans-serif;
   --shell-footer-space: 183px;
+  --shell-content-padding-inline: 48px;
   display: block;
+  position: relative;
   color: var(--ink);
   font: 14px var(--shell-font);
   padding-bottom: var(--shell-footer-space);
+}
+
+.shell-root {
+  container-type: inline-size;
+  container-name: shell;
+  display: block;
+  min-height: inherit;
 }
 
 *,
@@ -48,7 +57,8 @@ input:focus-visible {
   display: flex;
   align-items: center;
   gap: 25px;
-  padding: 0 48px;
+  min-width: 0;
+  padding: 0 var(--shell-content-padding-inline);
   border-bottom: 1px solid rgba(213, 224, 231, 0.7);
   position: relative;
   z-index: 2;
@@ -59,6 +69,7 @@ input:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
   font-family: var(--shell-display);
   font-size: 22px;
   font-weight: 700;
@@ -81,7 +92,17 @@ input:focus-visible {
   display: flex;
   gap: 10px;
   align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   font-weight: 650;
+}
+
+.project-name,
+.project .subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project .subtitle {
@@ -94,12 +115,21 @@ input:focus-visible {
   display: flex;
   align-items: center;
   gap: 24px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .shell-label {
   font-size: 11px;
   letter-spacing: 0.02em;
   color: var(--muted);
+}
+
+.shell-label-context {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar {
@@ -121,7 +151,7 @@ input:focus-visible {
   align-items: center;
   gap: 7px;
   font-size: 11px;
-  padding: 25px 48px;
+  padding: 25px var(--shell-content-padding-inline);
 }
 
 .health button {
@@ -150,16 +180,28 @@ input:focus-visible {
 }
 
 .shell-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 5;
   border-top: 1px solid #cedce4;
   background: rgba(250, 252, 253, 0.96);
   backdrop-filter: blur(30px);
-  padding: 17px 48px 15px;
+  padding: 17px var(--shell-content-padding-inline) 15px;
   box-shadow: 0 -8px 40px #416f8810;
+}
+
+.shell-chrome-fixed {
+  position: fixed;
+  z-index: 5;
+}
+
+.shell-footer.shell-chrome-fixed {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+:host([layout-mode='bounded']) .shell-footer.shell-chrome-fixed {
+  left: var(--shell-fixed-left, 0);
+  right: auto;
+  width: var(--shell-fixed-width, 100%);
 }
 
 .eyebrow {
@@ -570,7 +612,6 @@ dialog h2 {
 }
 
 .notice {
-  position: fixed;
   top: 103px;
   left: 50%;
   transform: translateX(-50%);
@@ -584,6 +625,11 @@ dialog h2 {
   box-shadow: 0 8px 30px #233b4920;
 }
 
+:host([layout-mode='bounded']) .notice.shell-chrome-fixed {
+  left: calc(var(--shell-fixed-left, 0px) + var(--shell-fixed-width, 100%) / 2);
+  max-width: min(90vw, var(--shell-fixed-width, 100%));
+}
+
 .muted {
   color: var(--muted);
 }
@@ -592,9 +638,12 @@ dialog h2 {
   display: none !important;
 }
 
-@media (max-width: 760px) {
+@container shell (max-width: 760px) {
+  .shell-root {
+    --shell-content-padding-inline: 20px;
+  }
+
   .shell-header {
-    padding: 0 20px;
     height: 72px;
     gap: 12px;
   }
@@ -624,7 +673,7 @@ dialog h2 {
   }
 
   .health {
-    padding: 19px 24px;
+    padding-block: 19px;
     font-size: 10px;
     flex-wrap: wrap;
   }
@@ -642,7 +691,7 @@ dialog h2 {
   }
 
   .shell-footer {
-    padding: 16px 20px 12px;
+    padding-block: 16px 12px;
   }
 
   .step-button {
@@ -674,5 +723,35 @@ dialog h2 {
 
   .expanded-panel {
     max-height: 50dvh;
+  }
+}
+
+@container shell (max-width: 420px) {
+  .shell-root {
+    --shell-content-padding-inline: 12px;
+  }
+
+  .shell-header {
+    gap: 8px;
+  }
+
+  .identity span {
+    max-width: 5ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-end {
+    gap: 6px;
+  }
+
+  .step-button {
+    padding: 0 4px;
+    font-size: 10px;
+  }
+
+  .step-button .product-tag {
+    display: none;
   }
 }

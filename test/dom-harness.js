@@ -11,6 +11,25 @@ export function installDomHarness({ nowMs = NOW_MS } = {}) {
   for (const key of globals) {
     globalThis[key] = domWindow[key];
   }
+  if (!globalThis.ResizeObserver) {
+    globalThis.ResizeObserver = class ResizeObserver {
+      #callback;
+      constructor(callback) {
+        this.#callback = callback;
+      }
+      observe() {
+        queueMicrotask(() => this.#callback([], this));
+      }
+      disconnect() {}
+      unobserve() {}
+    };
+  }
+  if (!globalThis.requestAnimationFrame) {
+    globalThis.requestAnimationFrame = (callback) => setTimeout(() => callback(Date.now()), 0);
+  }
+  if (!globalThis.cancelAnimationFrame) {
+    globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+  }
   freezeNow(nowMs);
   return domWindow;
 }

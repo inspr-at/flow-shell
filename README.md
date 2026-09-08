@@ -47,11 +47,29 @@ Install the runtime tarball as a host dependency (no runtime npm packages, CDN, 
 
 The Web Component loads `flow-shell.css` from `import.meta.url`. The default logo is `./assets/inspr-logo.svg` next to the module; hosts may override with `logo-src` pointing at `@inspr/flow-shell/assets/inspr-logo.svg` or their own asset. In-tree examples under `examples/` still use relative `../../src/` paths for local demo serving.
 
+### Host layout contract
+
+Embed `<inspr-flow-shell>` in the host content column at the width you want the shell to occupy. By default (`layout-mode="viewport"`) the footer stays viewport-fixed at the bottom with full horizontal span — unchanged from 0.1.2. For sidebar or bounded columns, opt in with `layout-mode="bounded"`: the shell measures its horizontal bounds (ResizeObserver plus window resize/scroll) and applies them to viewport-fixed chrome so the footer does not sit under a sidebar while remaining visible during long-content scroll.
+
+Optional host inputs (layout only; no identity or execution semantics):
+
+| Input | Effect |
+|-------|--------|
+| `layout-mode` | `viewport` (default) or `bounded` for horizontal host-bound chrome. |
+| `--shell-content-padding-inline` (CSS custom property) | Horizontal padding for header, health row, and footer. Default `48px`; compact shell widths reduce it via container queries on `.shell-root`. |
+| `--shell-footer-space` | Reserved bottom space so main content is not hidden under the fixed footer. Measured from the live footer height when observers run; default `183px` before first measure. |
+| `content-padding` attribute | Sets `--shell-content-padding-inline` (for example `content-padding="20px"`). |
+| `footer-space` attribute | Overrides measured `--shell-footer-space` when hosts need a fixed reserve. |
+
+Compact header/footer rules use container queries on the internal `.shell-root` wrapper (not `:host`), so a 342px content column gets compact treatment even when the viewport is wider. Long project, instance, and version labels truncate with ellipsis; full values remain on `title` attributes and existing control labels.
+
+`examples/host-sidebar/` is a minimal sidebar-host fixture with `layout-mode="bounded"`, a 2000px tall scroll block, and sidebar expand/collapse controls. Serve with `python3 dev-server.py 8765` and open `examples/host-sidebar/index.html`.
+
 ## Examples
 
 ```sh
 python3 dev-server.py 8765
-# open examples/host-a/index.html and examples/host-b/index.html
+# open examples/host-a/index.html, examples/host-b/index.html, and examples/host-sidebar/index.html
 ```
 
 ## Tests

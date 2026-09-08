@@ -105,15 +105,16 @@
     },
     "prepared_candidate": {
       "version": "0.1.1",
-      "status": "metadata-prepared",
-      "note": "Public repository metadata and CI/release automation prepared for inspr-at/flow-shell. Root owns repository creation, hosted CI proof, tag v0.1.1, and GitHub Release asset publication."
+      "status": "source-pr-open",
+      "public_repository": "https://github.com/inspr-at/flow-shell",
+      "note": "Public repository and source PR exist with release metadata and CI/admission automation for coordinate 0.1.1. Publication evidence is the four retained GitHub Release assets on tag v0.1.1 once root completes hosted CI, merge to main, tagging, forge dispatch, and native download proof. Coordinate 0.1.1 is not yet reserved or published; do not overwrite or rebuild private 0.1.1 dist candidates outside this repository."
     }
   },
   "outstanding_coordinator_gates": [
-    "Root creates inspr-at/flow-shell, pushes this history, merges to main, and runs hosted CI before tagging",
-    "Root-owned tag v0.1.1, dispatched forge publication, and native browser proof",
+    "Public repository inspr-at/flow-shell exists; source PR must pass hosted CI and merge to main before tagging",
+    "Root-owned tag v0.1.1, dispatched forge retention of the four declared assets, and native browser proof on a downloaded runtime tarball remain outstanding",
     "Package registry publication remains unauthorized; this coordinate does not claim the @inspr npm namespace",
-    "Local unpublished 0.1.0 dist artifacts remain immutable and must not be overwritten",
+    "Local unpublished 0.1.0 dist artifacts and the separate private 0.1.1 candidate outside this repository remain immutable and must not be overwritten or rebuilt",
     "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched"
   ],
   "handoff": {

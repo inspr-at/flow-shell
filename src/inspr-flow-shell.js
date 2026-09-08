@@ -23,7 +23,14 @@ import { escapeHtml } from './sanitize.js';
 import {
   applyBoundedGeometry,
   applyFooterSpace,
+  applyFillFooterCap,
   clearBoundedGeometry,
+  clearFillFooterCap,
+  resolveContentLayout,
+  resolveFillFooterCapacity,
+  resolveFillFooterReservation,
+  measureHostLocalTopOffset,
+  measureFillContentMinimumFromMetrics,
   resolveLayoutMode,
 } from './host-layout.js';
 
@@ -43,7 +50,7 @@ const HOST_LAYOUT_VARS = {
 
 export class InsprFlowShell extends HTMLElement {
   static get observedAttributes() {
-    return ['logo-src', 'content-padding', 'footer-space', 'layout-mode'];
+    return ['logo-src', 'content-padding', 'footer-space', 'layout-mode', 'content-layout'];
   }
 
   #state = normalizeShellState({});
@@ -82,11 +89,23 @@ export class InsprFlowShell extends HTMLElement {
       this.#syncLayoutMode();
       return;
     }
+    if (name === 'content-layout') {
+      this.#syncContentLayout();
+      return;
+    }
     this.render();
   }
 
   #layoutMode() {
     return resolveLayoutMode(this.getAttribute('layout-mode'));
+  }
+
+  #contentLayout() {
+    return resolveContentLayout(this.getAttribute('content-layout'));
+  }
+
+  #isFillLayout() {
+    return this.#contentLayout() === 'fill';
   }
 
   #isBounded() {
@@ -100,7 +119,19 @@ export class InsprFlowShell extends HTMLElement {
       return;
     }
     clearBoundedGeometry(this);
+    if (this.#isFillLayout()) {
+      this.#bindLayoutObservers();
+      return;
+    }
     this.#teardownBoundedObservers();
+  }
+
+  #syncContentLayout() {
+    if (!this.#isFillLayout()) {
+      clearFillFooterCap(this);
+    }
+    this.#bindLayoutObservers();
+    this.#syncFooterSpace();
   }
 
   #scheduleGeometrySync() {
@@ -117,11 +148,99 @@ export class InsprFlowShell extends HTMLElement {
     applyBoundedGeometry(this, this.getBoundingClientRect());
   }
 
+  #footerSpaceSyncing = false;
+
   #syncFooterSpace() {
-    if (this.hasAttribute('footer-space')) return;
+    if (!this.isConnected || this.#footerSpaceSyncing) return;
+    if (this.hasAttribute('footer-space')) {
+      if (!this.#isFillLayout()) {
+        clearFillFooterCap(this);
+      }
+      return;
+    }
     const footer = this.shadowRoot?.querySelector('.shell-footer');
     if (!footer) return;
-    applyFooterSpace(this, footer.getBoundingClientRect().height);
+
+    this.#footerSpaceSyncing = true;
+    try {
+      if (this.#isFillLayout()) {
+        const minContent = this.#measureFillContentMinimum();
+        const hostHeight = this.#hostLayoutHeight();
+        if (hostHeight > 0) {
+          const maxCapacity = resolveFillFooterCapacity(hostHeight, minContent);
+          const natural = this.#measureFooterNaturalHeight(footer);
+          const reserved = resolveFillFooterReservation(natural, maxCapacity);
+          applyFillFooterCap(this, reserved, maxCapacity);
+          return;
+        }
+      }
+      clearFillFooterCap(this);
+      applyFooterSpace(this, footer.getBoundingClientRect().height);
+    } finally {
+      this.#footerSpaceSyncing = false;
+    }
+  }
+
+  #measureFooterNaturalHeight(footer) {
+    const previous = this.style.getPropertyValue('--shell-footer-max-height');
+    this.style.removeProperty('--shell-footer-max-height');
+    const rectHeight = footer.getBoundingClientRect().height;
+    const scaffold = footer.querySelector('.shell-footer-scaffold');
+    const measured = Math.max(rectHeight, scaffold?.scrollHeight ?? 0);
+    if (previous) {
+      this.style.setProperty('--shell-footer-max-height', previous);
+    }
+    return measured;
+  }
+
+  #hostLayoutHeight() {
+    if (this.clientHeight > 0) return this.clientHeight;
+    const rect = this.getBoundingClientRect();
+    if (rect.height > 0) return rect.height;
+    return this.offsetHeight;
+  }
+
+  #hostComputedStyle() {
+    const view = this.ownerDocument?.defaultView;
+    if (!view?.getComputedStyle) return null;
+    return view.getComputedStyle(this);
+  }
+
+  #measureFillContentMinimum() {
+    const computed = this.#hostComputedStyle();
+    const custom = Number.parseFloat(computed?.getPropertyValue('--shell-fill-content-min') ?? '');
+    const scrollMin = Number.parseFloat(computed?.getPropertyValue('--shell-fill-scroll-min') ?? '');
+    const scrollReserve = Number.isFinite(scrollMin) && scrollMin > 0 ? scrollMin : 48;
+
+    const hostRect = this.getBoundingClientRect();
+    const hostSlot = this.shadowRoot?.querySelector('.host-slot');
+    const chromeAboveSlot = hostSlot
+      ? measureHostLocalTopOffset(hostRect, hostSlot.getBoundingClientRect())
+      : 0;
+
+    let slottedFixed = 0;
+    for (const child of this.children) {
+      const region = child.getAttribute('data-flow-host-region');
+      if (region === 'toolbar' || region === 'footer') {
+        slottedFixed += child.getBoundingClientRect().height;
+        continue;
+      }
+      const footer = child.querySelector?.(
+        '[data-flow-host-region="footer"], .project-footer, footer#project-footer, footer.project-footer',
+      );
+      if (footer) slottedFixed += footer.getBoundingClientRect().height;
+      if (!region) {
+        const toolbar = child.querySelector?.('[data-flow-host-region="toolbar"], .host-toolbar');
+        if (toolbar) slottedFixed += toolbar.getBoundingClientRect().height;
+      }
+    }
+
+    return measureFillContentMinimumFromMetrics({
+      chromeAboveSlot,
+      slottedFixedHeight: slottedFixed,
+      scrollReserve,
+      customMin: custom,
+    });
   }
 
   #bindBoundedGeometryListeners() {
@@ -165,7 +284,10 @@ export class InsprFlowShell extends HTMLElement {
 
     if (hasResizeObserver) {
       if (!this.#footerObserver) {
-        this.#footerObserver = new ResizeObserver(() => this.#syncFooterSpace());
+        this.#footerObserver = new ResizeObserver(() => {
+          if (!this.isConnected) return;
+          this.#syncFooterSpace();
+        });
       }
       this.#footerObserver.disconnect();
       this.#footerObserver.observe(footer);
@@ -173,7 +295,7 @@ export class InsprFlowShell extends HTMLElement {
 
     this.#syncFooterSpace();
 
-    if (!this.#isBounded()) {
+    if (!this.#isBounded() && !this.#isFillLayout()) {
       this.#teardownBoundedObservers();
       clearBoundedGeometry(this);
       return;
@@ -181,14 +303,24 @@ export class InsprFlowShell extends HTMLElement {
 
     if (hasResizeObserver) {
       if (!this.#hostObserver) {
-        this.#hostObserver = new ResizeObserver(() => this.#scheduleGeometrySync());
+        this.#hostObserver = new ResizeObserver(() => {
+          if (!this.isConnected) return;
+          if (this.#isBounded()) {
+            this.#scheduleGeometrySync();
+          }
+          if (this.#isFillLayout()) {
+            this.#syncFooterSpace();
+          }
+        });
       }
       this.#hostObserver.disconnect();
       this.#hostObserver.observe(this);
     }
 
-    this.#bindBoundedGeometryListeners();
-    this.#syncBoundedGeometry();
+    if (this.#isBounded()) {
+      this.#bindBoundedGeometryListeners();
+      this.#syncBoundedGeometry();
+    }
   }
 
   #syncHostLayoutVars() {
@@ -640,3 +772,19 @@ export * from './intents.js';
 export * from './gates.js';
 export * from './forecast.js';
 export * from './sanitize.js';
+export {
+  applyBoundedGeometry,
+  applyFooterSpace,
+  applyFillFooterCap,
+  clearBoundedGeometry,
+  clearFillFooterCap,
+  resolveLayoutMode,
+  resolveContentLayout,
+  resolveFillFooterHeight,
+  resolveFillFooterCapacity,
+  resolveFillFooterReservation,
+  measureHostLocalTopOffset,
+  measureFillContentMinimumFromMetrics,
+  LAYOUT_MODES,
+  CONTENT_LAYOUTS,
+} from './host-layout.js';

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>INSPR Flow Shell · Document scroll host</title>
+    <link rel="icon" href="../../src/assets/inspr-logo.svg" type="image/svg+xml">
+    <style>
+      :root { color-scheme: light; }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #eef3f6;
+        color: #253b4b;
+        font: 14px system-ui, sans-serif;
+      }
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 20px 40px;
+      }
+      inspr-flow-shell {
+        display: block;
+        width: 100%;
+      }
+      .host-document-layout {
+        display: block;
+      }
+      .host-scroll-body {
+        padding: 20px 0;
+      }
+      .project-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        padding: 12px 0 24px;
+        border-top: 1px solid #d8e3e9;
+        font-size: 12px;
+      }
+      .project-footer a {
+        color: #284b62;
+        text-decoration: none;
+      }
+      #tall-scroll-fixture {
+        min-height: 2000px;
+        margin-top: 16px;
+        padding: 16px;
+        border: 1px dashed #c5d5de;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.45);
+      }
+      .panel {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border: 1px solid #d8e3e9;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        color: #627581;
+      }
+      .controls button {
+        border: 1px solid #c5d5de;
+        background: #f9fbfc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font: inherit;
+        color: #284b62;
+        margin-top: 12px;
+      }
+      #intent-log {
+        font: 11px ui-monospace, monospace;
+        max-height: 120px;
+        overflow: auto;
+        padding-left: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <inspr-flow-shell
+        layout-mode="bounded"
+        content-padding="20px"
+        logo-src="../../src/assets/inspr-logo.svg"
+      >
+        <div class="host-document-layout">
+          <div class="host-scroll-body">
+            <p style="font-size:10px;font-weight:700;letter-spacing:1.9px;color:#8c7747">DOCUMENT SCROLL · DEFAULT CONTENT LAYOUT</p>
+            <h1 style="font-size:clamp(22px,4vw,32px);letter-spacing:-0.6px;margin:0 0 12px">Page scroll with in-slot project footer.</h1>
+            <p style="color:#627581;line-height:1.7;margin:0">Without <code>content-layout="fill"</code>, the shell keeps document-scroll behaviour. Scroll the page to reach long content; the Flow footer stays viewport-fixed.</p>
+            <div class="panel" id="host-panel">Waiting for layout metrics…</div>
+            <div class="controls">
+              <button type="button" id="scroll-bottom">Scroll page to bottom</button>
+            </div>
+            <div id="tall-scroll-fixture">
+              <p>Tall scroll fixture (2000px). Use document scroll to reach the end.</p>
+            </div>
+            <h2 style="font-size:13px;margin-top:24px">Intent log</h2>
+            <ol id="intent-log"></ol>
+          </div>
+          <footer class="project-footer" id="project-footer">
+            <span>Project navigation</span>
+            <a href="#escape">Escape</a>
+            <a href="#settings">Settings</a>
+            <a href="#product">Product sessions</a>
+          </footer>
+        </div>
+      </inspr-flow-shell>
+    </div>
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

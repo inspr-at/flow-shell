@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>INSPR Flow Shell · Fill layout host</title>
+    <link rel="icon" href="../../src/assets/inspr-logo.svg" type="image/svg+xml">
+    <style>
+      :root { color-scheme: light; }
+      *, *::before, *::after {
+        box-sizing: border-box;
+        padding: 0;
+      }
+      html, body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        background: #eef3f6;
+        color: #253b4b;
+        font: 14px system-ui, sans-serif;
+      }
+      .sidebar {
+        flex: 0 0 48px;
+        background: linear-gradient(180deg, #284b62, #1d3a4d);
+        color: #d8e6ee;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        transition: flex-basis 0.2s ease;
+      }
+      body.sidebar-expanded .sidebar {
+        flex-basis: 230px;
+        writing-mode: horizontal-tb;
+        transform: none;
+      }
+      .main {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 900px;
+        max-height: 100dvh;
+        overflow: hidden;
+      }
+      inspr-flow-shell {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        padding-bottom: var(--shell-footer-space);
+      }
+      .host-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #d8e3e9;
+        background: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        color: #627581;
+      }
+      .host-toolbar strong,
+      .host-toolbar span {
+        padding: 10px 16px;
+      }
+      .host-project-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        height: 100%;
+      }
+      .host-scroll-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+      }
+      .host-scroll-body > :where(p, h1, h2, .panel, .controls, #intent-log) {
+        margin-inline: 20px;
+      }
+      .host-scroll-body > :where(p, h1, h2):first-child {
+        margin-top: 20px;
+      }
+      .project-footer {
+        flex: 0 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        border-top: 1px solid #d8e3e9;
+        background: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+      }
+      .project-footer > * {
+        padding: 12px 0;
+      }
+      .project-footer > :first-child {
+        padding-left: 20px;
+      }
+      .project-footer > :last-child {
+        padding-right: 20px;
+      }
+      .project-footer a {
+        color: #284b62;
+        text-decoration: none;
+      }
+      .project-footer a:hover {
+        text-decoration: underline;
+      }
+      .panel {
+        margin-top: 16px;
+        border: 1px solid #d8e3e9;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        color: #627581;
+        line-height: 1.6;
+      }
+      .panel {
+        padding: 12px 14px;
+      }
+      #tall-scroll-fixture {
+        min-height: 2400px;
+        margin: 16px 20px 0;
+        border: 1px dashed #c5d5de;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.45);
+        padding: 16px;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .controls button {
+        border: 1px solid #c5d5de;
+        background: #f9fbfc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font: inherit;
+        color: #284b62;
+      }
+      #intent-log {
+        font: 11px ui-monospace, monospace;
+        max-height: 120px;
+        overflow: auto;
+        padding-left: 18px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Application navigation">NAV</aside>
+    <div class="main">
+      <inspr-flow-shell
+        content-layout="fill"
+        layout-mode="bounded"
+        content-padding="0"
+        logo-src="../../src/assets/inspr-logo.svg"
+      >
+        <header class="host-toolbar" data-flow-host-region="toolbar" aria-label="Host toolbar">
+          <strong>Classic shell</strong>
+          <span>Two slotted nodes · global * padding reset · internal scroll</span>
+        </header>
+        <div class="host-project-body" data-flow-host-region="body">
+          <div class="host-scroll-body" id="scroll-body">
+            <p style="font-size:10px;font-weight:700;letter-spacing:1.9px;color:#8c7747">FILL HOST · PAI MOS TWO-NODE SLOT SHAPE</p>
+            <h1 style="font-size:clamp(22px,4vw,32px);letter-spacing:-0.6px;margin:0 0 12px">Toolbar and project body are sibling light-DOM nodes.</h1>
+            <p style="color:#627581;line-height:1.7;margin:0">Use <code>data-flow-host-region="toolbar"</code> and <code>data-flow-host-region="body"</code> for the Paimos classic shape. Long copy scrolls inside <code>.host-scroll-body</code>; the project footer stays fixed within the body column above the Flow delivery footer.</p>
+            <div class="panel" id="host-panel">Waiting for layout metrics…</div>
+            <div class="controls">
+              <button type="button" id="sidebar-toggle">Toggle sidebar (48/230px)</button>
+              <button type="button" id="scroll-top">Scroll content top</button>
+              <button type="button" id="scroll-mid">Scroll content middle</button>
+              <button type="button" id="scroll-bottom">Scroll content bottom</button>
+              <button type="button" id="toggle-map">Toggle Flow map</button>
+              <button type="button" id="clear-fill">Remove fill attr</button>
+              <button type="button" id="restore-fill">Restore fill attr</button>
+            </div>
+            <div id="tall-scroll-fixture">
+              <p>Tall scroll fixture (2400px). Document scroll should stay at 0 while this region scrolls.</p>
+              <p>Resize to 390px or 1280px and confirm project footer links and Flow footer controls stay clickable.</p>
+            </div>
+            <h2 style="font-size:13px;margin-top:24px">Intent log</h2>
+            <ol id="intent-log"></ol>
+          </div>
+          <footer class="project-footer" id="project-footer">
+            <span>Project navigation</span>
+            <a href="#escape" id="link-escape">Escape</a>
+            <a href="#settings" id="link-settings">Settings</a>
+            <a href="#product" id="link-product">Product sessions</a>
+          </footer>
+        </div>
+      </inspr-flow-shell>
+    </div>
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

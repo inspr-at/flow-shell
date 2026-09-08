@@ -18,6 +18,7 @@ def main() -> int:
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     print(f'flow-shell dev server at http://127.0.0.1:{port}/examples/host-a/index.html')
     print(f'alt host B at http://127.0.0.1:{port}/examples/host-b/index.html')
+    print(f'sidebar host at http://127.0.0.1:{port}/examples/host-sidebar/index.html')
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -20,6 +20,12 @@ import {
   createViewDraftsIntent,
 } from './intents.js';
 import { escapeHtml } from './sanitize.js';
+import {
+  applyBoundedGeometry,
+  applyFooterSpace,
+  clearBoundedGeometry,
+  resolveLayoutMode,
+} from './host-layout.js';
 
 const MARKER_ICON = {
   done: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 4.8 9 10 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -30,15 +36,24 @@ const MARKER_ICON = {
   unknown: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4.6 4.8c.2-.9 1.6-1.1 1.8-.1.15.7-.5.9-.7 1.4-.15.35-.05.9.6.9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="8.6" r="0.6" fill="currentColor"/></svg>',
 };
 
+const HOST_LAYOUT_VARS = {
+  'content-padding': '--shell-content-padding-inline',
+  'footer-space': '--shell-footer-space',
+};
+
 export class InsprFlowShell extends HTMLElement {
   static get observedAttributes() {
-    return ['logo-src'];
+    return ['logo-src', 'content-padding', 'footer-space', 'layout-mode'];
   }
 
   #state = normalizeShellState({});
   #reviewSnapshot = null;
   #noticeTimer = null;
   #eventsBound = false;
+  #footerObserver = null;
+  #hostObserver = null;
+  #geometryFrame = null;
+  #onWindowGeometryChange = () => this.#scheduleGeometrySync();
 
   constructor() {
     super();
@@ -47,11 +62,144 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   connectedCallback() {
+    this.#syncHostLayoutVars();
     this.render();
   }
 
-  attributeChangedCallback() {
+  disconnectedCallback() {
+    this.#teardownLayoutObservers();
+  }
+
+  attributeChangedCallback(name) {
+    if (name in HOST_LAYOUT_VARS) {
+      this.#syncHostLayoutVars();
+      if (name === 'footer-space') {
+        this.#syncFooterSpace();
+      }
+      return;
+    }
+    if (name === 'layout-mode') {
+      this.#syncLayoutMode();
+      return;
+    }
     this.render();
+  }
+
+  #layoutMode() {
+    return resolveLayoutMode(this.getAttribute('layout-mode'));
+  }
+
+  #isBounded() {
+    return this.#layoutMode() === 'bounded';
+  }
+
+  #syncLayoutMode() {
+    if (this.#isBounded()) {
+      this.#bindLayoutObservers();
+      this.#syncBoundedGeometry();
+      return;
+    }
+    clearBoundedGeometry(this);
+    this.#teardownBoundedObservers();
+  }
+
+  #scheduleGeometrySync() {
+    if (!this.#isBounded()) return;
+    if (this.#geometryFrame != null) return;
+    this.#geometryFrame = requestAnimationFrame(() => {
+      this.#geometryFrame = null;
+      this.#syncBoundedGeometry();
+    });
+  }
+
+  #syncBoundedGeometry() {
+    if (!this.isConnected || !this.#isBounded()) return;
+    applyBoundedGeometry(this, this.getBoundingClientRect());
+  }
+
+  #syncFooterSpace() {
+    if (this.hasAttribute('footer-space')) return;
+    const footer = this.shadowRoot?.querySelector('.shell-footer');
+    if (!footer) return;
+    applyFooterSpace(this, footer.getBoundingClientRect().height);
+  }
+
+  #bindBoundedGeometryListeners() {
+    if (!this.isConnected || !this.#isBounded()) return;
+    window.removeEventListener('resize', this.#onWindowGeometryChange);
+    window.removeEventListener('scroll', this.#onWindowGeometryChange);
+    window.addEventListener('resize', this.#onWindowGeometryChange);
+    window.addEventListener('scroll', this.#onWindowGeometryChange, { passive: true });
+  }
+
+  #teardownBoundedObservers() {
+    this.#hostObserver?.disconnect();
+    this.#hostObserver = null;
+    window.removeEventListener('resize', this.#onWindowGeometryChange);
+    window.removeEventListener('scroll', this.#onWindowGeometryChange);
+    if (this.#geometryFrame != null) {
+      cancelAnimationFrame(this.#geometryFrame);
+      this.#geometryFrame = null;
+    }
+  }
+
+  #teardownLayoutObservers() {
+    this.#footerObserver?.disconnect();
+    this.#footerObserver = null;
+    this.#teardownBoundedObservers();
+  }
+
+  #bindLayoutObservers() {
+    if (!this.isConnected) return;
+
+    const footer = this.shadowRoot?.querySelector('.shell-footer');
+    const hasResizeObserver = typeof ResizeObserver === 'function';
+
+    if (!footer) {
+      if (this.#isBounded()) {
+        this.#bindBoundedGeometryListeners();
+        this.#syncBoundedGeometry();
+      }
+      return;
+    }
+
+    if (hasResizeObserver) {
+      if (!this.#footerObserver) {
+        this.#footerObserver = new ResizeObserver(() => this.#syncFooterSpace());
+      }
+      this.#footerObserver.disconnect();
+      this.#footerObserver.observe(footer);
+    }
+
+    this.#syncFooterSpace();
+
+    if (!this.#isBounded()) {
+      this.#teardownBoundedObservers();
+      clearBoundedGeometry(this);
+      return;
+    }
+
+    if (hasResizeObserver) {
+      if (!this.#hostObserver) {
+        this.#hostObserver = new ResizeObserver(() => this.#scheduleGeometrySync());
+      }
+      this.#hostObserver.disconnect();
+      this.#hostObserver.observe(this);
+    }
+
+    this.#bindBoundedGeometryListeners();
+    this.#syncBoundedGeometry();
+  }
+
+  #syncHostLayoutVars() {
+    for (const [attribute, cssVar] of Object.entries(HOST_LAYOUT_VARS)) {
+      const value = this.getAttribute(attribute);
+      if (value) {
+        this.style.setProperty(cssVar, value);
+      } else {
+        this.style.removeProperty(cssVar);
+      }
+    }
   }
 
   get shellState() {
@@ -355,14 +503,16 @@ export class InsprFlowShell extends HTMLElement {
 
   render() {
     const logoSrc = this.getAttribute('logo-src') || new URL('./assets/inspr-logo.svg', import.meta.url).href;
+    const projectTitle = escapeHtml(this.#state.header.projectName);
     const subtitle = this.#state.header.projectSubtitle
       ? `<span class="subtitle">${escapeHtml(this.#state.header.projectSubtitle)}</span>`
       : '';
+    const projectLabel = `${this.#state.header.projectName}${this.#state.header.projectSubtitle ? ` ${this.#state.header.projectSubtitle}` : ''}`;
     const instance = this.#state.header.instanceLabel
-      ? `<span class="shell-label shell-label-context">${escapeHtml(this.#state.header.instanceLabel)}</span>`
+      ? `<span class="shell-label shell-label-context" title="${escapeHtml(this.#state.header.instanceLabel)}">${escapeHtml(this.#state.header.instanceLabel)}</span>`
       : '';
     const version = this.#state.header.version
-      ? `<span class="shell-label shell-label-context">${escapeHtml(this.#state.header.version)}</span>`
+      ? `<span class="shell-label shell-label-context" title="${escapeHtml(this.#state.header.version)}">${escapeHtml(this.#state.header.version)}</span>`
       : '';
     const healthDot = this.#state.health.status === 'available' ? 'dot' : `dot ${this.#state.health.status}`;
     const mapDetail = this.#state.delivery.mapDetail || 'Requirements baseline gates delivery work. Stage exploration never executes.';
@@ -370,14 +520,16 @@ export class InsprFlowShell extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="${new URL('./flow-shell.css', import.meta.url).href}" data-shell-css="true">
+      <div class="shell-root">
+      <div class="shell-scaffold">
       <header class="shell-header">
-        <button type="button" class="identity" data-action="identity" aria-label="About INSPR shell">
+        <button type="button" class="identity" data-action="identity" aria-label="About ${escapeHtml(this.#state.header.appName)} shell">
           <img src="${escapeHtml(logoSrc)}" alt="">
           <span>${escapeHtml(this.#state.header.appName)}</span>
         </button>
         <span class="header-divider"></span>
-        <button type="button" class="project" data-action="project">
-          ${escapeHtml(this.#state.header.projectName)} ${subtitle}
+        <button type="button" class="project" data-action="project" title="${escapeHtml(projectLabel)}" aria-label="Project: ${escapeHtml(projectLabel)}">
+          <span class="project-name">${projectTitle}</span>${subtitle}
         </button>
         <div class="header-end">
           ${instance}
@@ -395,8 +547,12 @@ export class InsprFlowShell extends HTMLElement {
         </div>
         <div class="host-slot"><slot></slot></div>
       </div>
-      <div class="notice" role="status" hidden></div>
-      <footer class="shell-footer">
+      </div>
+      </div>
+      <div class="notice shell-chrome-fixed" role="status" hidden></div>
+      <footer class="shell-footer shell-chrome-fixed">
+      <div class="shell-footer-root">
+      <div class="shell-footer-scaffold">
         <section class="expanded-panel" ${this.#state.mapExpanded ? '' : 'hidden'}>
           <div class="expanded-heading">
             <div>
@@ -450,8 +606,11 @@ export class InsprFlowShell extends HTMLElement {
           </label>
           <button type="button" class="text-button" data-action="review-batch">Review batch</button>
         </div>
+      </div>
+      </div>
       </footer>
       <dialog data-shell-dialog></dialog>`;
+    this.#bindLayoutObservers();
   }
 }
 

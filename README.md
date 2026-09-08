@@ -2,7 +2,7 @@
 
 Reusable INSPR delivery shell: compact identity header, branch-map footer, and an explicit intent boundary for host applications.
 
-PPM: **INSPR-380** packages the INSPR-375/INSPR-379 accepted shell for independent host consumption. This tree prepares legacy SemVer **`0.1.2`** (`legacy-semver-public`) for the public source repository **[inspr-at/flow-shell](https://github.com/inspr-at/flow-shell)**. The public Git repository exists; retained GitHub Release assets on an exact version tag are the authoritative publication evidence for the runtime tarball. Annotated tag **`v0.1.1`** reached build but failed admission before any release assets were retained; coordinate **`0.1.2`** carries the annotated-tag fix and is the next publication target. Until root completes hosted CI, tags `v0.1.2`, and dispatches forge retention, verify from a Git checkout or locally built exports rather than assuming release assets are already present. Local **0.1.0** remains an immutable superseded unpublished candidate outside this public channel. `private: true` remains the npm publish guard and does not claim the `@inspr` npm namespace.
+PPM: **INSPR-382** extends the INSPR-375/INSPR-379 shell with bounded host layout and compact headers. This tree prepares legacy SemVer **`0.1.3`** (`legacy-semver-public`) for **[inspr-at/flow-shell](https://github.com/inspr-at/flow-shell)**. Public **0.1.2** already has four retained, verified GitHub Release assets and remains immutable. Version **0.1.3** becomes published only when the exact approved tag passes canonical release admission and retains its four assets; source or CI success alone is not publication evidence. Failed tag **v0.1.1** and unpublished local **0.1.0** remain unchanged. `private: true` remains the npm publish guard and does not claim the `@inspr` npm namespace.
 
 Original work is licensed under **AGPL-3.0-only**. See `LICENSE` and `NOTICES.json`. Third-party test tooling keeps its own licenses. This candidate does not relicense anything.
 
@@ -47,11 +47,29 @@ Install the runtime tarball as a host dependency (no runtime npm packages, CDN, 
 
 The Web Component loads `flow-shell.css` from `import.meta.url`. The default logo is `./assets/inspr-logo.svg` next to the module; hosts may override with `logo-src` pointing at `@inspr/flow-shell/assets/inspr-logo.svg` or their own asset. In-tree examples under `examples/` still use relative `../../src/` paths for local demo serving.
 
+### Host layout contract
+
+Embed `<inspr-flow-shell>` in the host content column at the width you want the shell to occupy. By default (`layout-mode="viewport"`) the footer stays viewport-fixed at the bottom with full horizontal span — unchanged from 0.1.2. For sidebar or bounded columns, opt in with `layout-mode="bounded"`: the shell measures its horizontal bounds (ResizeObserver plus window resize/scroll) and applies them to viewport-fixed chrome so the footer does not sit under a sidebar while remaining visible during long-content scroll.
+
+Optional host inputs (layout only; no identity or execution semantics):
+
+| Input | Effect |
+|-------|--------|
+| `layout-mode` | `viewport` (default) or `bounded` for horizontal host-bound chrome. |
+| `--shell-content-padding-inline` (CSS custom property) | Horizontal padding for header, health row, and footer. Default `48px`; compact shell widths reduce it via container queries on the internal `.shell-scaffold` descendant (not the `.shell-root` query container itself). |
+| `--shell-footer-space` | Reserved bottom space so main content is not hidden under the fixed footer. Measured from the live footer height when observers run; default `183px` before first measure. The `footer-space` attribute overrides measurement until removed. |
+| `content-padding` attribute | Sets `--shell-content-padding-inline` (for example `content-padding="20px"`). |
+| `footer-space` attribute | Overrides measured `--shell-footer-space` when hosts need a fixed reserve. |
+
+Compact header/footer rules use container queries on the internal `.shell-root` and `.shell-footer-root` wrappers (not `:host`), with responsive padding applied on `.shell-scaffold` and `.shell-footer-scaffold` descendants so a 342px content column gets compact treatment even when the viewport is wider. Viewport-fixed footer and notice chrome stay outside `.shell-root` so `container-type` layout containment cannot re-anchor fixed positioning. At narrow widths the header wraps into two rows so app identity, project title, version/instance, and account controls stay readable. Long project, instance, and version labels truncate with ellipsis; full values remain on `title` attributes, `aria-label`, and existing control labels.
+
+`examples/host-sidebar/` is a minimal sidebar-host fixture with `layout-mode="bounded"`, a 2000px tall scroll block, and sidebar expand/collapse controls. Serve with `python3 dev-server.py 8765` and open `examples/host-sidebar/index.html`.
+
 ## Examples
 
 ```sh
 python3 dev-server.py 8765
-# open examples/host-a/index.html and examples/host-b/index.html
+# open examples/host-a/index.html, examples/host-b/index.html, and examples/host-sidebar/index.html
 ```
 
 ## Tests
@@ -65,9 +83,9 @@ Node 24 built-in test runner only. `happy-dom` is a locked development dependenc
 
 ## Packaging and public release
 
-`npm run release:build` publishes one immutable runtime coordinate under `dist/inspr-flow-shell-0.1.2/` (`inspr-flow-shell-0.1.2.tgz` + sidecar manifest) from the closed allowlist in `release/allowlist.json`. `npm run source:export` publishes `dist/inspr-flow-shell-source-0.1.2/` (`inspr-flow-shell-source-0.1.2.tgz` + sidecar manifest) with tests, release tooling, CI workflows, and curated synthetic contract fixtures. Canonical published bytes use GNU tar + Node 24 with Git committer-epoch timestamps; local BSD tar builds are valid for development and are not claimed byte-identical.
+`npm run release:build` publishes one immutable runtime coordinate under `dist/inspr-flow-shell-0.1.3/` (`inspr-flow-shell-0.1.3.tgz` + sidecar manifest) from the closed allowlist in `release/allowlist.json`. `npm run source:export` publishes `dist/inspr-flow-shell-source-0.1.3/` (`inspr-flow-shell-source-0.1.3.tgz` + sidecar manifest) with tests, release tooling, CI workflows, and curated synthetic contract fixtures. Canonical published bytes use GNU tar + Node 24 with Git committer-epoch timestamps; local BSD tar builds are valid for development and are not claimed byte-identical.
 
-Publication inventory, coordinator gates, and the artifact contract live in `release/publication-inventory.json`. CI runs `npm test` on `main` and pull requests (`.github/workflows/ci.yml`). Release admission is manual `workflow_dispatch` with an explicit version coordinate (`.github/workflows/release.yml`). Dispatch it from `main` for an ephemeral admission run, or from tag `v0.1.2` / `0.1.2` when the checkout is exactly that tagged commit so forge retention can publish immutable GitHub Release assets. The release workflow runs `npm test`, builds runtime + source exports, proves installed runtime and extracted source consumers (`release/admit-consumer-proof.mjs`), verifies manifest/commit binding including annotated-tag peeling (`release/admit-release.mjs`), uploads ephemeral transfer artifacts, and retains forge assets only on a matching version tag. `upload-artifact` is transfer only, not publication evidence. This coordinate is not an npm registry publication; once retained release assets exist, install hosts from the GitHub Release runtime tarball, or from a Git checkout / extracted source tree until then.
+Publication inventory, coordinator gates, and the artifact contract live in `release/publication-inventory.json`. CI runs `npm test` on `main` and pull requests (`.github/workflows/ci.yml`). Release admission is manual `workflow_dispatch` with an explicit version coordinate (`.github/workflows/release.yml`). Dispatch it from `main` for an ephemeral admission run, or from tag `v0.1.3` / `0.1.3` when the checkout is exactly that tagged commit so forge retention can publish immutable GitHub Release assets. The release workflow runs `npm test`, builds runtime + source exports, proves installed runtime and extracted source consumers (`release/admit-consumer-proof.mjs`), verifies manifest/commit binding including annotated-tag peeling (`release/admit-release.mjs`), uploads ephemeral transfer artifacts, and retains forge assets only on a matching version tag. `upload-artifact` is transfer only, not publication evidence. This coordinate is not an npm registry publication; once retained release assets exist, install hosts from the GitHub Release runtime tarball, or from a Git checkout / extracted source tree until then.
 
 From a public Git checkout or extracted non-Git source tree: `npm ci && npm test`. Tree-mode runtime rebuilds bind `release/source-provenance.json` and refuse a tampered tree or a changed existing coordinate. `private_source_commit` records opaque original lineage; `current_source_commit` is the actual public Git commit exported.
 

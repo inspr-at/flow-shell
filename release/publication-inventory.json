@@ -2,7 +2,7 @@
   "schema": "inspr-flow-shell-publication-inventory/0.1",
   "package": "@inspr/flow-shell",
   "version_scheme": "legacy-semver-public",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "public_repository_target": "inspr-at/flow-shell",
   "package_registry": {
     "publish": false,
@@ -111,22 +111,29 @@
       "note": "Annotated tag v0.1.1 at merge 9578d0d passed build but failed admit-consumer-proof because annotated tags were not peeled to terminal commits. No GitHub Release assets were retained; the tag and failed candidate bytes remain unchanged."
     },
     "prepared_candidate": {
-      "version": "0.1.2",
-      "status": "annotated-tag-fix-prepared",
+      "version": "0.1.3",
+      "status": "bounded-host-layout-prepared",
       "public_repository": "https://github.com/inspr-at/flow-shell",
-      "note": "New coordinate after annotated-tag admission fix. Publication evidence is the four retained GitHub Release assets on tag v0.1.2 once root completes hosted CI, merge, tagging, forge dispatch, and native download proof. Do not reuse or retag v0.1.1."
+      "note": "INSPR-382 adds opt-in sidebar bounds, compact readable headers and measured footer reserve. Publication requires exact approved merge/tag, canonical admission and four retained forge assets; source/native checks alone are not publication."
+    },
+    "previous_published": {
+      "version": "0.1.2",
+      "tag": "v0.1.2",
+      "source_commit": "707f186bb4cec5d22ec308daef41cdf4facedbc9",
+      "status": "published",
+      "note": "Four retained GitHub Release assets verified; existing bytes remain immutable."
     }
   },
   "outstanding_coordinator_gates": [
-    "Merge annotated-tag fix to main and pass hosted CI before tagging v0.1.2",
-    "Root-owned tag v0.1.2, dispatched forge retention of the four declared assets, and native browser proof on a downloaded runtime tarball remain outstanding",
-    "Public tag v0.1.1 remains a failed admission candidate; do not force-retag, delete, or republish it",
-    "Package registry publication remains unauthorized; this coordinate does not claim the @inspr npm namespace",
-    "Local unpublished 0.1.0 dist artifacts and the separate private 0.1.1 candidate outside this repository remain immutable and must not be overwritten or rebuilt",
-    "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched"
+    "Pass exact source and release-metadata approval plus hosted CI before tagging v0.1.3",
+    "Root-owned tag v0.1.3, canonical forge retention of four declared assets, and downloaded runtime native/consumer verification remain required",
+    "Published v0.1.2 assets and failed v0.1.1 tag remain immutable; no replacement or retagging",
+    "Package registry publication remains unauthorized; private:true stays the npm publish guard",
+    "Local unpublished0.1.0 and separate private candidates remain immutable",
+    "Published Aithema versions remain untouched; host dependency updates ship separately"
   ],
   "handoff": {
-    "review_extract": "npm run source:export && mkdir -p /tmp/flow-shell-source-review && tar -xzf dist/inspr-flow-shell-source-0.1.2/inspr-flow-shell-source-0.1.2.tgz -C /tmp/flow-shell-source-review",
+    "review_extract": "npm run source:export && mkdir -p /tmp/flow-shell-source-review && tar -xzf dist/inspr-flow-shell-source-0.1.3/inspr-flow-shell-source-0.1.3.tgz -C /tmp/flow-shell-source-review",
     "review_verify": "cd /tmp/flow-shell-source-review && npm ci && npm test && npm run release:build",
     "provenance_note": "private_source_commit is original opaque lineage from the reviewed source export. current_source_commit is the Git commit actually exported from the public repository. Runtime artifact manifests bind source.commit to current_source_commit under frozen schema 0.1."
   }

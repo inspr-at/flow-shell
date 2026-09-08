@@ -63,6 +63,31 @@ export function resolveCommit(repoRoot, ref = 'HEAD') {
 }
 
 /**
+ * Resolve a ref to the terminal commit object, peeling lightweight and
+ * annotated tags via Git's ^{} syntax. Use only at release-admission boundaries
+ * that must accept refs/tags/* checkouts; release source builders keep using
+ * resolveCommit for direct commit refs.
+ *
+ * @param {string} repoRoot
+ * @param {string} ref
+ * @returns {string}
+ */
+export function resolvePeelableRefCommit(repoRoot, ref) {
+  assertCommitRef(ref);
+  let commit;
+  try {
+    commit = String(git(repoRoot, ['rev-parse', '--verify', `${ref}^{commit}`], 'utf8')).trim();
+  } catch {
+    throw new Error(`ref ${JSON.stringify(ref)} does not resolve to a commit object`);
+  }
+  const type = String(git(repoRoot, ['cat-file', '-t', commit], 'utf8')).trim();
+  if (type !== 'commit') {
+    throw new Error(`release source must be a commit object, got ${type} for ${ref}`);
+  }
+  return commit;
+}
+
+/**
  * @typedef {{ mode: string, type: string, object: string, path: string }} TreeEntry
  */
 

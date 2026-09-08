@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { resolveCommit } from './lib/git.mjs';
+import { resolveCommit, resolvePeelableRefCommit } from './lib/git.mjs';
 import { resolveLayout } from './lib/layout.mjs';
 import {
   resolveDeclaredReleaseMetadata,
@@ -83,7 +83,7 @@ export function resolveAdmissionSourceCommit({ repoRoot, ref }) {
   const headCommit = resolveCommit(layout.gitRoot, 'HEAD');
   if (ref && ref.startsWith('refs/tags/')) {
     const tag = assertReleaseRefMatchesVersion(ref, readPackageVersion(repoRoot));
-    const tagCommit = resolveCommit(layout.gitRoot, tag);
+    const tagCommit = resolvePeelableRefCommit(layout.gitRoot, tag);
     if (tagCommit !== headCommit) {
       throw new Error(
         `checked-out commit ${headCommit} does not match tag ${tag} target ${tagCommit}; `

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Explicit legacy SemVer coordinate to admit (for example 0.1.1)
+        description: Explicit legacy SemVer coordinate to admit (for example 0.1.2)
         required: true
         type: string
 

@@ -2,7 +2,7 @@
   "schema": "inspr-flow-shell-publication-inventory/0.1",
   "package": "@inspr/flow-shell",
   "version_scheme": "legacy-semver-public",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "public_repository_target": "inspr-at/flow-shell",
   "package_registry": {
     "publish": false,
@@ -75,7 +75,7 @@
     "continuous": ".github/workflows/ci.yml",
     "release_admission": ".github/workflows/release.yml",
     "release_trigger": "workflow_dispatch with explicit version coordinate from main or an exact version tag checkout",
-    "release_gates": "npm test, runtime/source build, admit-consumer-proof, admit-release manifest/commit binding; main CI success alone is not a release gate",
+    "release_gates": "npm test, runtime/source build, admit-consumer-proof with annotated-tag peeling, admit-release manifest/commit binding; main CI success alone is not a release gate",
     "auto_publish_on_push": false,
     "ephemeral_transfer": "actions/upload-artifact is CI transfer only, not publication evidence",
     "retained_forge_assets": "GitHub Release assets on refs/tags/{version} or refs/tags/v{version} via release/retain-forge-assets.mjs; tag target must equal checked-out commit; only the four declared asset names are allowed and extras/duplicates are refused; mismatched tags are refused before forge I/O; identical re-runs are idempotent and changed bytes are refused",
@@ -103,22 +103,30 @@
       "status": "superseded-unpublished-local",
       "note": "Local 0.1.0 runtime/source artifacts in dist/inspr-flow-shell-0.1.0/ and dist/inspr-flow-shell-source-0.1.0/ must not be overwritten or repacked."
     },
-    "prepared_candidate": {
+    "failed_public_tag": {
       "version": "0.1.1",
-      "status": "source-pr-open",
+      "tag": "v0.1.1",
+      "source_commit": "9578d0d826a9b12ccdfa2830249c635bac0115d6",
+      "status": "admission-failed",
+      "note": "Annotated tag v0.1.1 at merge 9578d0d passed build but failed admit-consumer-proof because annotated tags were not peeled to terminal commits. No GitHub Release assets were retained; the tag and failed candidate bytes remain unchanged."
+    },
+    "prepared_candidate": {
+      "version": "0.1.2",
+      "status": "annotated-tag-fix-prepared",
       "public_repository": "https://github.com/inspr-at/flow-shell",
-      "note": "Public repository and source PR exist with release metadata and CI/admission automation for coordinate 0.1.1. Publication evidence is the four retained GitHub Release assets on tag v0.1.1 once root completes hosted CI, merge to main, tagging, forge dispatch, and native download proof. Coordinate 0.1.1 is not yet reserved or published; do not overwrite or rebuild private 0.1.1 dist candidates outside this repository."
+      "note": "New coordinate after annotated-tag admission fix. Publication evidence is the four retained GitHub Release assets on tag v0.1.2 once root completes hosted CI, merge, tagging, forge dispatch, and native download proof. Do not reuse or retag v0.1.1."
     }
   },
   "outstanding_coordinator_gates": [
-    "Public repository inspr-at/flow-shell exists; source PR must pass hosted CI and merge to main before tagging",
-    "Root-owned tag v0.1.1, dispatched forge retention of the four declared assets, and native browser proof on a downloaded runtime tarball remain outstanding",
+    "Merge annotated-tag fix to main and pass hosted CI before tagging v0.1.2",
+    "Root-owned tag v0.1.2, dispatched forge retention of the four declared assets, and native browser proof on a downloaded runtime tarball remain outstanding",
+    "Public tag v0.1.1 remains a failed admission candidate; do not force-retag, delete, or republish it",
     "Package registry publication remains unauthorized; this coordinate does not claim the @inspr npm namespace",
     "Local unpublished 0.1.0 dist artifacts and the separate private 0.1.1 candidate outside this repository remain immutable and must not be overwritten or rebuilt",
     "Existing published Aithema 0.1.0/0.2.0 artifacts remain untouched"
   ],
   "handoff": {
-    "review_extract": "npm run source:export && mkdir -p /tmp/flow-shell-source-review && tar -xzf dist/inspr-flow-shell-source-0.1.1/inspr-flow-shell-source-0.1.1.tgz -C /tmp/flow-shell-source-review",
+    "review_extract": "npm run source:export && mkdir -p /tmp/flow-shell-source-review && tar -xzf dist/inspr-flow-shell-source-0.1.2/inspr-flow-shell-source-0.1.2.tgz -C /tmp/flow-shell-source-review",
     "review_verify": "cd /tmp/flow-shell-source-review && npm ci && npm test && npm run release:build",
     "provenance_note": "private_source_commit is original opaque lineage from the reviewed source export. current_source_commit is the Git commit actually exported from the public repository. Runtime artifact manifests bind source.commit to current_source_commit under frozen schema 0.1."
   }

@@ -15,6 +15,7 @@ import assert from 'node:assert/strict';
 
 import { buildRelease } from '../release/build-release.mjs';
 import { buildSourceExport, resolveSourceExport } from '../release/build-source.mjs';
+import { admitConsumerProof } from '../release/admit-consumer-proof.mjs';
 import {
   admitRelease,
   assertAdmissibleReleaseRef,
@@ -32,7 +33,7 @@ import {
 } from '../release/retain-forge-assets.mjs';
 import { sha256 } from '../release/lib/digest.mjs';
 import { stableSourceArtifactFilename, stableSourceManifestFilename, verifySourceReleasePair } from '../release/lib/source-manifest.mjs';
-import { resolveCommit } from '../release/lib/git.mjs';
+import { resolveCommit, resolvePeelableRefCommit } from '../release/lib/git.mjs';
 import {
   commitAll,
   createTempRepo,
@@ -231,6 +232,7 @@ describe('INSPR-380 source export', () => {
 describe('INSPR-380 public release automation', () => {
   it('publication inventory documents the GitHub release contract', () => {
     const inventory = JSON.parse(readFileSync(join(repoRoot, 'release/publication-inventory.json'), 'utf8'));
+    assert.equal(inventory.version, VERSION);
     assert.equal(inventory.version_scheme, LEGACY_SEMVER_PUBLIC);
     assert.equal(inventory.release_channels.runtime_package, 'github-runtime-tgz');
     assert.equal(inventory.release_channels.public_source_candidate, 'github-source');
@@ -241,6 +243,9 @@ describe('INSPR-380 public release automation', () => {
     assert.match(inventory.ci.retained_forge_assets, /retain-forge-assets/);
     assert.match(inventory.ci.canonical_toolchain_enforcement, /FLOW_SHELL_CANONICAL_RELEASE/);
     assert.match(inventory.ci.release_gates, /admit-consumer-proof/);
+    assert.match(inventory.ci.release_gates, /annotated-tag/);
+    assert.equal(inventory.release_lineage.failed_public_tag.version, '0.1.1');
+    assert.equal(inventory.release_lineage.prepared_candidate.version, VERSION);
     assert.match(inventory.handoff.review_extract, /mkdir -p/);
   });
 
@@ -261,7 +266,7 @@ describe('INSPR-380 public release automation', () => {
     }
   });
 
-  it('admission binds manifests to the actual checked-out commit and tag target', () => {
+  it('admission binds manifests to the actual checked-out commit and lightweight tag target', () => {
     const { repo, pkgRoot, commit } = seededUmbrella('flow-admit-bind-');
     const distRoot = join(pkgRoot, 'dist');
     try {
@@ -278,6 +283,49 @@ describe('INSPR-380 public release automation', () => {
       assert.equal(admitted.runtime.manifest.source.commit, commit);
       assert.equal(admitted.source.manifest.source.current_source_commit, commit);
       assert.equal(resolveAdmissionSourceCommit({ repoRoot: pkgRoot, ref: `refs/tags/v${VERSION}` }).commit, commit);
+    } finally {
+      trashTemp(repo);
+    }
+  });
+
+  it('peels annotated tags to terminal commits only at the admission boundary', () => {
+    const { repo, pkgRoot, commit } = seededUmbrella('flow-admit-annotated-');
+    try {
+      git(repo, ['tag', '-a', `v${VERSION}`, '-m', 'annotated release fixture']);
+      assert.throws(() => resolveCommit(repo, `v${VERSION}`), /got tag/);
+      assert.equal(resolvePeelableRefCommit(repo, `v${VERSION}`), commit);
+      assert.equal(resolvePeelableRefCommit(repo, `refs/tags/v${VERSION}`), commit);
+      git(repo, ['tag', `v${VERSION}-light`]);
+      assert.equal(resolvePeelableRefCommit(repo, `v${VERSION}-light`), commit);
+    } finally {
+      trashTemp(repo);
+    }
+  });
+
+  it('admission and consumer proof succeed on an annotated version tag checkout', () => {
+    if (process.env.FLOW_SHELL_SOURCE_PROOF === '1') return;
+    const { repo, pkgRoot, commit } = seededUmbrella('flow-admit-consumer-annotated-');
+    const distRoot = join(pkgRoot, 'dist');
+    try {
+      buildRelease({ repoRoot: pkgRoot, outDir: distRoot });
+      buildSourceExport({ repoRoot: pkgRoot, outDir: distRoot });
+      git(repo, ['tag', '-a', `v${VERSION}`, '-m', 'annotated release fixture']);
+      const admitted = admitRelease({
+        repoRoot: pkgRoot,
+        version: VERSION,
+        ref: `refs/tags/v${VERSION}`,
+        distRoot,
+      });
+      assert.equal(admitted.commit, commit);
+      const proof = admitConsumerProof({
+        repoRoot: pkgRoot,
+        version: VERSION,
+        ref: `refs/tags/v${VERSION}`,
+        distRoot,
+        scriptRoot: repoRoot,
+      });
+      assert.equal(proof.commit, commit);
+      assert.equal(proof.version, VERSION);
     } finally {
       trashTemp(repo);
     }

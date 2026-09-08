@@ -27,10 +27,11 @@ function extractTarball(archivePath, dest) {
  * closed consumer proofs. Does not modify canonical dist bytes.
  *
  * @param {object} input
- * @param {string} input.repoRoot
+ * @param {string} input.repoRoot admission and consumer package root
  * @param {string} input.runtimeArtifactPath
+ * @param {string} [input.scriptRoot] checkout that owns release proof scripts and devDependencies
  */
-export function proveRuntimeConsumer({ repoRoot, runtimeArtifactPath }) {
+export function proveRuntimeConsumer({ repoRoot, runtimeArtifactPath, scriptRoot = repoRoot }) {
   const consumerDir = mkdtempSync(join(tmpdir(), 'flow-shell-runtime-consumer-'));
   mkdirSync(consumerDir, { recursive: true });
   writeFileSync(join(consumerDir, 'package.json'), `${JSON.stringify({
@@ -38,7 +39,7 @@ export function proveRuntimeConsumer({ repoRoot, runtimeArtifactPath }) {
     private: true,
     type: 'module',
   }, null, 2)}\n`);
-  copyFileSync(join(repoRoot, 'release/consumer-proof.mjs'), join(consumerDir, 'consumer-proof.mjs'));
+  copyFileSync(join(scriptRoot, 'release/consumer-proof.mjs'), join(consumerDir, 'consumer-proof.mjs'));
   const install = spawnSync(
     'npm',
     ['install', '--ignore-scripts', '--no-audit', '--no-fund', runtimeArtifactPath],
@@ -52,10 +53,10 @@ export function proveRuntimeConsumer({ repoRoot, runtimeArtifactPath }) {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   execFileSync(NODE, [
-    join(repoRoot, 'release/host-dom-proof.mjs'),
+    join(scriptRoot, 'release/host-dom-proof.mjs'),
     join(consumerDir, 'node_modules/@inspr/flow-shell'),
   ], {
-    cwd: repoRoot,
+    cwd: scriptRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return consumerDir;
@@ -118,11 +119,13 @@ export function admitConsumerProof({
   version = process.env.RELEASE_VERSION,
   ref = process.env.RELEASE_REF,
   distRoot = join(repoRoot, 'dist'),
+  scriptRoot = defaultRepoRoot,
 } = {}) {
   const admitted = admitRelease({ repoRoot, version, ref, distRoot });
   proveRuntimeConsumer({
     repoRoot,
     runtimeArtifactPath: admitted.runtime.artifactPath,
+    scriptRoot,
   });
   proveSourceConsumer({
     repoRoot,

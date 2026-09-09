@@ -585,6 +585,7 @@ export class InsprFlowShell extends HTMLElement {
       action,
       executionMode: this.#state.selectedExecutionMode,
     });
+    this.#scheduleClockAging();
     this.emitIntent(createReviewBatchIntent(this.#state));
     const items = this.#state.delivery.scopeItems
       .map((item) => `<div><strong>${escapeHtml(item)}</strong><span>Included</span></div>`)
@@ -652,6 +653,7 @@ export class InsprFlowShell extends HTMLElement {
         action: this.#state.selectedAction,
         executionMode: event.target.value,
       });
+      this.#scheduleClockAging();
       const footerMode = root.querySelector('[data-action="footer-execution-mode"]');
       if (footerMode) footerMode.value = event.target.value;
       const expiry = dialog.querySelector('[data-review-expiry]');

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeShellState } from '../src/state.js';
 import { INTENT_TYPES } from '../src/intents.js';
@@ -291,6 +291,162 @@ test('done requirements task with dangling baseline keeps Define stage out of pe
   assert.ok(define);
   assert.doesNotMatch(define.getAttribute('aria-label'), /performed/i);
   assert.equal(define.classList.contains('done'), false);
+});
+
+test('clock timer re-ages progress at fresh_until + 1ms without visibility refresh', async () => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  try {
+    mock.timers.setTime(NOW_MS);
+    const InsprFlowShell = await loadFlowShell();
+    const shell = mountShell(
+      InsprFlowShell,
+      readyBuild({
+        progress: {
+          freshnessLabel: 'Host says fresh',
+          taskLabel: 'Synthetic observed task',
+          overallLabel: 'Overall',
+          task: {
+            progress: {
+              status: 'in_progress',
+              percent_complete: 62,
+              freshness: 'fresh',
+              fresh_until: '2026-09-07T12:00:02Z',
+              basis: { kind: 'task_assessment', evidence_ref: 'evidence_try' },
+            },
+            forecast: {
+              percent_complete: 62,
+              estimated_finish: '2026-09-07T12:35:00Z',
+              kind: 'worker_estimate',
+            },
+          },
+        },
+        prerequisites: {
+          requirementsBaseline: passGate({ freshUntil: '2026-09-07T12:00:02Z' }),
+          deployArtifact: unknownGate({ gateKind: 'artifact' }),
+          pharosTarget: passGate({
+            gateKind: 'target_readiness',
+            evidenceRef: 'evidence_pharos',
+            readiness: 'preliminary',
+            targetRef: 'target_prod',
+          }),
+          janusGate: unknownGate({ gateKind: 'access' }),
+        },
+      }),
+    );
+    const freshState = readyBuild({
+      progress: {
+        freshnessLabel: 'Host says fresh',
+        taskLabel: 'Synthetic observed task',
+        overallLabel: 'Overall',
+        task: {
+          progress: {
+            status: 'in_progress',
+            percent_complete: 62,
+            freshness: 'fresh',
+            fresh_until: '2026-09-07T12:00:02Z',
+            basis: { kind: 'task_assessment', evidence_ref: 'evidence_try' },
+          },
+          forecast: {
+            percent_complete: 62,
+            estimated_finish: '2026-09-07T12:35:00Z',
+            kind: 'worker_estimate',
+          },
+        },
+      },
+      prerequisites: {
+        requirementsBaseline: passGate({ freshUntil: '2026-09-07T12:00:02Z' }),
+        deployArtifact: unknownGate({ gateKind: 'artifact' }),
+        pharosTarget: passGate({
+          gateKind: 'target_readiness',
+          evidenceRef: 'evidence_pharos',
+          readiness: 'preliminary',
+          targetRef: 'target_prod',
+        }),
+        janusGate: unknownGate({ gateKind: 'access' }),
+      },
+    });
+    const progress = shell.shadowRoot.querySelector('[data-shell-clock-progress]');
+    assert.doesNotMatch(progress.textContent, /Stale observations/);
+    mock.timers.tick(2000);
+    assert.doesNotMatch(progress.textContent, /Stale observations/);
+    mock.timers.tick(1);
+    assert.match(progress.textContent, /Stale observations/);
+    assert.doesNotMatch(progress.textContent, /Host says fresh/);
+
+    mock.timers.setTime(NOW_MS);
+    shell.shellState = freshState;
+    clickAction(shell, 'review-batch');
+    const dialog = shell.shadowRoot.querySelector('dialog[data-shell-dialog]');
+    const confirm = dialog.querySelector('[data-review-confirm]');
+    const start = dialog.querySelector('[data-action="confirm-start"]');
+    const expiry = dialog.querySelector('[data-review-expiry]').textContent;
+    confirm.checked = true;
+    confirm.focus();
+    confirm.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.equal(start.disabled, false);
+    mock.timers.tick(2001);
+    assert.equal(dialog.open, true);
+    assert.equal(confirm.checked, true);
+    assert.equal(dialog.querySelector('[data-review-expiry]').textContent, expiry);
+    assert.equal(start.disabled, true);
+    assert.match(dialog.querySelector('[data-review-gate-reason]').textContent, /stale/i);
+    shell.remove();
+  } finally {
+    mock.timers.reset();
+    freezeNow(NOW_MS);
+  }
+});
+
+test('review snapshot expiry schedules clock aging without renewing consent', async () => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  try {
+    mock.timers.setTime(NOW_MS);
+    const InsprFlowShell = await loadFlowShell();
+    const shell = mountShell(
+      InsprFlowShell,
+      readyBuild({
+        prerequisites: {
+          requirementsBaseline: passGate({ freshUntil: '2026-09-07T12:20:00Z' }),
+          deployArtifact: unknownGate({ gateKind: 'artifact' }),
+          pharosTarget: passGate({
+            gateKind: 'target_readiness',
+            evidenceRef: 'evidence_pharos',
+            readiness: 'preliminary',
+            targetRef: 'target_prod',
+          }),
+          janusGate: unknownGate({ gateKind: 'access' }),
+        },
+        progress: {
+          task: {
+            progress: {
+              status: 'in_progress',
+              percent_complete: 10,
+              freshness: 'fresh',
+              fresh_until: '2026-09-07T12:20:00Z',
+            },
+            forecast: { percent_complete: 10, estimated_finish: '2026-09-07T12:40:00Z' },
+          },
+        },
+      }),
+    );
+    clickAction(shell, 'review-batch');
+    const dialog = shell.shadowRoot.querySelector('dialog[data-shell-dialog]');
+    const confirm = dialog.querySelector('[data-review-confirm]');
+    const expiry = dialog.querySelector('[data-review-expiry]').textContent;
+    confirm.checked = true;
+    confirm.focus();
+    confirm.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.equal(dialog.querySelector('[data-action="confirm-start"]').disabled, false);
+    mock.timers.tick(5 * 60 * 1000 + 1);
+    assert.equal(dialog.querySelector('[data-review-expiry]').textContent, expiry);
+    assert.equal(confirm.checked, true);
+    assert.equal(dialog.querySelector('[data-action="confirm-start"]').disabled, true);
+    assert.match(dialog.querySelector('[data-review-gate-reason]').textContent, /Confirmation snapshot has expired/i);
+    shell.remove();
+  } finally {
+    mock.timers.reset();
+    freezeNow(NOW_MS);
+  }
 });
 
 test('visibility refresh re-ages progress without a host state push', async () => {

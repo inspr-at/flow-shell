@@ -261,51 +261,54 @@ function freshUntilMs(entry) {
   return parseBoundaryMs(entry.freshUntil ?? entry.fresh_until);
 }
 
-function collectProgressBoundaries(progressState, boundaries) {
-  for (const snapshot of [progressState?.task, progressState?.overall]) {
-    const freshUntil = freshUntilMs(snapshot?.progress);
-    if (freshUntil != null) boundaries.push(freshUntil);
-    const eta = parseBoundaryMs(snapshot?.forecast?.estimated_finish);
-    if (eta != null) boundaries.push(eta);
-  }
-}
-
-function collectGateBoundaries(prerequisites, boundaries) {
-  for (const gate of Object.values(prerequisites ?? {})) {
-    const freshUntil = freshUntilMs(gate);
-    if (freshUntil != null) boundaries.push(freshUntil);
-  }
-}
-
 function collectIdentityBoundaries(identity, boundaries) {
   if (identity?.status !== 'present' || !identity.value) return;
   const value = identity.value;
-  for (const field of [value.freshUntil, value.expiresAt, value.issuedAt]) {
+  for (const field of [value.freshUntil, value.expiresAt]) {
     const parsed = parseBoundaryMs(field);
-    if (parsed != null) boundaries.push(parsed);
+    if (parsed != null) boundaries.push({ instant: parsed, inclusive: true });
+  }
+}
+
+function pushExclusiveBoundary(boundaries, boundaryMs) {
+  if (boundaryMs == null) return;
+  boundaries.push({ instant: boundaryMs + 1, inclusive: false });
+}
+
+function collectProgressWakeBoundaries(progressState, boundaries) {
+  for (const snapshot of [progressState?.task, progressState?.overall]) {
+    pushExclusiveBoundary(boundaries, freshUntilMs(snapshot?.progress));
+    pushExclusiveBoundary(boundaries, parseBoundaryMs(snapshot?.forecast?.estimated_finish));
+  }
+}
+
+function collectGateWakeBoundaries(prerequisites, boundaries) {
+  for (const gate of Object.values(prerequisites ?? {})) {
+    pushExclusiveBoundary(boundaries, freshUntilMs(gate));
   }
 }
 
 export function collectClockAgingBoundaries(shellState, { now = Date.now(), extraBoundaries = [] } = {}) {
   const boundaries = [];
   const evaluatedAt = parseBoundaryMs(shellState?.evaluatedAt);
-  if (evaluatedAt != null) boundaries.push(evaluatedAt + EVALUATION_MAX_AGE_MS);
-  collectProgressBoundaries(shellState?.progress, boundaries);
-  collectGateBoundaries(shellState?.prerequisites, boundaries);
+  if (evaluatedAt != null) pushExclusiveBoundary(boundaries, evaluatedAt + EVALUATION_MAX_AGE_MS);
+  collectProgressWakeBoundaries(shellState?.progress, boundaries);
+  collectGateWakeBoundaries(shellState?.prerequisites, boundaries);
   collectIdentityBoundaries(shellState?.identity, boundaries);
   for (const boundary of extraBoundaries) {
-    const parsed = parseBoundaryMs(boundary);
-    if (parsed != null) boundaries.push(parsed);
+    pushExclusiveBoundary(boundaries, parseBoundaryMs(boundary));
   }
-  return boundaries.filter((boundary) => boundary > now);
+  return boundaries
+    .map((entry) => entry.instant)
+    .filter((instant) => instant > now);
 }
 
 export function nextClockAgingDelayMs(shellState, { now = Date.now(), extraBoundaries = [] } = {}) {
   const upcoming = collectClockAgingBoundaries(shellState, { now, extraBoundaries });
-  const nextBoundaryDelay =
-    upcoming.length > 0 ? Math.min(...upcoming) - now : CLOCK_AGING_MIN_INTERVAL_MS;
-  if (nextBoundaryDelay <= 0) return 0;
-  return Math.min(nextBoundaryDelay, CLOCK_AGING_MIN_INTERVAL_MS);
+  if (upcoming.length === 0) return CLOCK_AGING_MIN_INTERVAL_MS;
+  const delay = Math.min(...upcoming) - now;
+  if (delay <= 0) return 0;
+  return Math.min(delay, CLOCK_AGING_MIN_INTERVAL_MS);
 }
 
 export function withViewedStage(shellState, stageIndex) {

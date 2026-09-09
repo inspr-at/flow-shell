@@ -97,7 +97,7 @@ test('confirmation snapshot binds scope, action, mode, evidence, and expiry', ()
   );
 });
 
-test('clock aging boundaries include evaluation, progress, gates, and review expiry', () => {
+test('clock aging boundaries schedule the first stale instant after exclusive expiry', () => {
   const state = normalizeShellState({
     evaluatedAt: NOW_ISO,
     prerequisites: { requirementsBaseline: passGate({ freshUntil: '2026-09-07T12:08:00Z' }) },
@@ -109,25 +109,31 @@ test('clock aging boundaries include evaluation, progress, gates, and review exp
     },
   });
   const boundaries = collectClockAgingBoundaries(state, { now: NOW_MS });
-  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:06:00Z')));
-  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:08:00Z')));
-  assert.ok(boundaries.includes(NOW_MS + EVALUATION_MAX_AGE_MS));
+  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:06:00Z') + 1));
+  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:08:00Z') + 1));
+  assert.ok(boundaries.includes(NOW_MS + EVALUATION_MAX_AGE_MS + 1));
   const reviewExpiry = new Date(NOW_MS + CONFIRMATION_TTL_MS).toISOString();
   const withReview = collectClockAgingBoundaries(state, {
     now: NOW_MS,
     extraBoundaries: [reviewExpiry],
   });
-  assert.ok(withReview.includes(NOW_MS + CONFIRMATION_TTL_MS));
+  assert.ok(withReview.includes(NOW_MS + CONFIRMATION_TTL_MS + 1));
 });
 
-test('next clock aging delay picks the nearest boundary capped at ten minutes', () => {
+test('next clock aging delay wakes one millisecond after the nearest exclusive boundary', () => {
   const state = normalizeShellState({
     evaluatedAt: NOW_ISO,
     progress: {
       task: { progress: { fresh_until: '2026-09-07T12:06:00Z' } },
     },
   });
-  assert.equal(nextClockAgingDelayMs(state, { now: NOW_MS }), 6 * 60 * 1000);
+  assert.equal(nextClockAgingDelayMs(state, { now: NOW_MS }), 6 * 60 * 1000 + 1);
+  const atBoundary = nextClockAgingDelayMs(state, { now: Date.parse('2026-09-07T12:06:00Z') });
+  assert.equal(atBoundary, 1);
+  const afterBoundary = collectClockAgingBoundaries(state, {
+    now: Date.parse('2026-09-07T12:06:00Z') + 1,
+  });
+  assert.equal(afterBoundary.includes(Date.parse('2026-09-07T12:06:00Z') + 1), false);
   const idle = normalizeShellState({ evaluatedAt: null, progress: {} });
   assert.equal(nextClockAgingDelayMs(idle, { now: NOW_MS }), CLOCK_AGING_MIN_INTERVAL_MS);
 });

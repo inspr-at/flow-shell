@@ -10,6 +10,7 @@ import {
   loadFlowShell,
   mountShell,
   setSelectValue,
+  teardownMountedNodes,
   triggerVisibilityRefresh,
 } from './dom-harness.js';
 import { DIGEST_B, JAN_ISO, NOW_ISO, NOW_MS, labelledLocalContext, passGate, unknownGate } from './helpers.js';
@@ -17,7 +18,7 @@ import { DIGEST_B, JAN_ISO, NOW_ISO, NOW_MS, labelledLocalContext, passGate, unk
 installDomHarness();
 
 test.afterEach(() => {
-  document.body.replaceChildren();
+  teardownMountedNodes();
 });
 
 function readyBuild(overrides = {}) {

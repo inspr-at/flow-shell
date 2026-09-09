@@ -90,6 +90,13 @@ export function triggerVisibilityRefresh(shell) {
   doc.dispatchEvent(new Event('visibilitychange'));
 }
 
+export function teardownMountedNodes() {
+  if (!globalThis.document?.body) return;
+  for (const node of [...document.body.children]) {
+    node.remove();
+  }
+}
+
 function assertPresent(value, label) {
   if (!value) {
     throw new Error(`Missing element: ${label}`);

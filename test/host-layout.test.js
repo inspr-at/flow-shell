@@ -10,12 +10,16 @@ import {
   clearBoundedGeometry,
   resolveLayoutMode,
 } from '../src/host-layout.js';
-import { installDomHarness, loadFlowShell, mountShell } from './dom-harness.js';
+import { installDomHarness, loadFlowShell, mountShell, teardownMountedNodes } from './dom-harness.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const css = readFileSync(join(root, 'src/flow-shell.css'), 'utf8');
 
 installDomHarness();
+
+test.afterEach(() => {
+  teardownMountedNodes();
+});
 
 test('host layout keeps viewport-fixed footer without transform containment', () => {
   assert.doesNotMatch(css, /transform:\s*translateZ\(0\)/);

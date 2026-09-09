@@ -18,11 +18,16 @@ import {
   installDomHarness,
   loadFlowShell,
   mountShell,
+  teardownMountedNodes,
 } from './dom-harness.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 installDomHarness();
+
+test.afterEach(() => {
+  teardownMountedNodes();
+});
 
 function mountTwoNodeFillHost(InsprFlowShell, { height = 600, width = 390 } = {}) {
   const frame = document.createElement('div');

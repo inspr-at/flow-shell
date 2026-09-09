@@ -124,7 +124,8 @@ Hosts that feed `shellState` directly (not via `fromDeliveryContract`) must supp
 ## Non-blocking follow-ups
 
 - Native browser proof stays with the controller. This package uses the committed happy-dom harness only.
-- `getStageGate` still does not consult `evaluatedAt`; contract-sourced gates do not age; `resolveFreshness` has no max-age from `reported_at`; there is no timer, so freshness re-ages on a host push.
+- `getStageGate` still does not consult `evaluatedAt`; contract-sourced gates do not age; `resolveFreshness` has no max-age from `reported_at`.
+- Connected shells re-age presentation on expiry boundaries and at least every ten minutes via a local clock timer and visibility return, without mutating host state or review consent.
 - Conservative fallback can still print more than once on a missing-forecast line; past `estimated_finish` still clamps to `ETA ~0 min`.
 - Do not duplicate the Janus Paimos dependency reporter; a future stream producer should reuse it.
 - These documents and the shell remain claims and intent UI, not an auth or execution engine.

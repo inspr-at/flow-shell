@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CLOCK_AGING_MIN_INTERVAL_MS,
+  CONFIRMATION_TTL_MS,
+  EVALUATION_MAX_AGE_MS,
+  collectClockAgingBoundaries,
   confirmationSnapshot,
+  nextClockAgingDelayMs,
   normalizeShellState,
   snapshotsMatch,
 } from '../src/state.js';
@@ -90,4 +95,39 @@ test('confirmation snapshot binds scope, action, mode, evidence, and expiry', ()
     snapshotsMatch(current, { ...snap, evaluatedAt: '2026-09-07T12:01:00Z' }),
     false,
   );
+});
+
+test('clock aging boundaries include evaluation, progress, gates, and review expiry', () => {
+  const state = normalizeShellState({
+    evaluatedAt: NOW_ISO,
+    prerequisites: { requirementsBaseline: passGate({ freshUntil: '2026-09-07T12:08:00Z' }) },
+    progress: {
+      task: {
+        progress: { fresh_until: '2026-09-07T12:06:00Z' },
+        forecast: { estimated_finish: '2026-09-07T12:20:00Z' },
+      },
+    },
+  });
+  const boundaries = collectClockAgingBoundaries(state, { now: NOW_MS });
+  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:06:00Z')));
+  assert.ok(boundaries.includes(Date.parse('2026-09-07T12:08:00Z')));
+  assert.ok(boundaries.includes(NOW_MS + EVALUATION_MAX_AGE_MS));
+  const reviewExpiry = new Date(NOW_MS + CONFIRMATION_TTL_MS).toISOString();
+  const withReview = collectClockAgingBoundaries(state, {
+    now: NOW_MS,
+    extraBoundaries: [reviewExpiry],
+  });
+  assert.ok(withReview.includes(NOW_MS + CONFIRMATION_TTL_MS));
+});
+
+test('next clock aging delay picks the nearest boundary capped at ten minutes', () => {
+  const state = normalizeShellState({
+    evaluatedAt: NOW_ISO,
+    progress: {
+      task: { progress: { fresh_until: '2026-09-07T12:06:00Z' } },
+    },
+  });
+  assert.equal(nextClockAgingDelayMs(state, { now: NOW_MS }), 6 * 60 * 1000);
+  const idle = normalizeShellState({ evaluatedAt: null, progress: {} });
+  assert.equal(nextClockAgingDelayMs(idle, { now: NOW_MS }), CLOCK_AGING_MIN_INTERVAL_MS);
 });

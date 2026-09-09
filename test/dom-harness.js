@@ -84,6 +84,12 @@ export function setSelectValue(shell, action, value) {
   return select;
 }
 
+export function triggerVisibilityRefresh(shell) {
+  const doc = shell.ownerDocument;
+  Object.defineProperty(doc, 'visibilityState', { configurable: true, value: 'visible' });
+  doc.dispatchEvent(new Event('visibilitychange'));
+}
+
 function assertPresent(value, label) {
   if (!value) {
     throw new Error(`Missing element: ${label}`);

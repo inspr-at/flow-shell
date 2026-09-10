@@ -51,6 +51,13 @@ const HOST_LAYOUT_VARS = {
   'footer-space': '--shell-footer-space',
 };
 
+const NOTICE_TOP_GAP_PX = 12;
+
+export function resolveNoticeTop(headerBottom, gap = NOTICE_TOP_GAP_PX) {
+  const safeGap = Number.isFinite(gap) && gap >= 0 ? gap : NOTICE_TOP_GAP_PX;
+  return Math.ceil(Math.max(0, headerBottom) + safeGap);
+}
+
 export class InsprFlowShell extends HTMLElement {
   static get observedAttributes() {
     return ['logo-src', 'content-padding', 'footer-space', 'layout-mode', 'content-layout'];
@@ -62,9 +69,10 @@ export class InsprFlowShell extends HTMLElement {
   #clockTimer = null;
   #eventsBound = false;
   #footerObserver = null;
+  #headerObserver = null;
   #hostObserver = null;
   #geometryFrame = null;
-  #onWindowGeometryChange = () => this.#scheduleGeometrySync();
+  #onWindowGeometryChange = () => this.#scheduleChromeGeometrySync();
   #onVisibilityChange = () => {
     if (this.ownerDocument?.visibilityState === 'visible') {
       this.#refreshClockPresentation();
@@ -134,7 +142,9 @@ export class InsprFlowShell extends HTMLElement {
       this.#bindLayoutObservers();
       return;
     }
-    this.#teardownBoundedObservers();
+    this.#hostObserver?.disconnect();
+    this.#hostObserver = null;
+    this.#bindLayoutObservers();
   }
 
   #syncContentLayout() {
@@ -145,13 +155,24 @@ export class InsprFlowShell extends HTMLElement {
     this.#syncFooterSpace();
   }
 
-  #scheduleGeometrySync() {
-    if (!this.#isBounded()) return;
+  #scheduleChromeGeometrySync() {
     if (this.#geometryFrame != null) return;
     this.#geometryFrame = requestAnimationFrame(() => {
       this.#geometryFrame = null;
-      this.#syncBoundedGeometry();
+      if (!this.isConnected) return;
+      if (this.#isBounded()) {
+        this.#syncBoundedGeometry();
+      }
+      this.#syncNoticeGeometry();
     });
+  }
+
+  #syncNoticeGeometry() {
+    if (!this.isConnected) return;
+    const header = this.shadowRoot?.querySelector('.shell-header');
+    if (!header) return;
+    const top = resolveNoticeTop(header.getBoundingClientRect().bottom);
+    this.style.setProperty('--shell-notice-top', `${top}px`);
   }
 
   #syncBoundedGeometry() {
@@ -254,15 +275,19 @@ export class InsprFlowShell extends HTMLElement {
     });
   }
 
-  #bindBoundedGeometryListeners() {
-    if (!this.isConnected || !this.#isBounded()) return;
+  #bindChromeGeometryListeners() {
+    if (!this.isConnected) return;
     window.removeEventListener('resize', this.#onWindowGeometryChange);
     window.removeEventListener('scroll', this.#onWindowGeometryChange);
     window.addEventListener('resize', this.#onWindowGeometryChange);
     window.addEventListener('scroll', this.#onWindowGeometryChange, { passive: true });
   }
 
-  #teardownBoundedObservers() {
+  #teardownLayoutObservers() {
+    this.#footerObserver?.disconnect();
+    this.#footerObserver = null;
+    this.#headerObserver?.disconnect();
+    this.#headerObserver = null;
     this.#hostObserver?.disconnect();
     this.#hostObserver = null;
     window.removeEventListener('resize', this.#onWindowGeometryChange);
@@ -273,21 +298,29 @@ export class InsprFlowShell extends HTMLElement {
     }
   }
 
-  #teardownLayoutObservers() {
-    this.#footerObserver?.disconnect();
-    this.#footerObserver = null;
-    this.#teardownBoundedObservers();
-  }
-
   #bindLayoutObservers() {
     if (!this.isConnected) return;
 
+    const header = this.shadowRoot?.querySelector('.shell-header');
     const footer = this.shadowRoot?.querySelector('.shell-footer');
     const hasResizeObserver = typeof ResizeObserver === 'function';
 
+    this.#bindChromeGeometryListeners();
+    this.#syncNoticeGeometry();
+
+    if (header && hasResizeObserver) {
+      if (!this.#headerObserver) {
+        this.#headerObserver = new ResizeObserver(() => {
+          if (!this.isConnected) return;
+          this.#scheduleChromeGeometrySync();
+        });
+      }
+      this.#headerObserver.disconnect();
+      this.#headerObserver.observe(header);
+    }
+
     if (!footer) {
       if (this.#isBounded()) {
-        this.#bindBoundedGeometryListeners();
         this.#syncBoundedGeometry();
       }
       return;
@@ -307,7 +340,8 @@ export class InsprFlowShell extends HTMLElement {
     this.#syncFooterSpace();
 
     if (!this.#isBounded() && !this.#isFillLayout()) {
-      this.#teardownBoundedObservers();
+      this.#hostObserver?.disconnect();
+      this.#hostObserver = null;
       clearBoundedGeometry(this);
       return;
     }
@@ -317,7 +351,7 @@ export class InsprFlowShell extends HTMLElement {
         this.#hostObserver = new ResizeObserver(() => {
           if (!this.isConnected) return;
           if (this.#isBounded()) {
-            this.#scheduleGeometrySync();
+            this.#scheduleChromeGeometrySync();
           }
           if (this.#isFillLayout()) {
             this.#syncFooterSpace();
@@ -329,7 +363,6 @@ export class InsprFlowShell extends HTMLElement {
     }
 
     if (this.#isBounded()) {
-      this.#bindBoundedGeometryListeners();
       this.#syncBoundedGeometry();
     }
   }
@@ -366,6 +399,7 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   showNotice(text) {
+    this.#syncNoticeGeometry();
     const notice = this.shadowRoot.querySelector('.notice');
     if (!notice) return;
     notice.textContent = text;
@@ -799,7 +833,7 @@ export class InsprFlowShell extends HTMLElement {
       <footer class="shell-footer shell-chrome-fixed">
       <div class="shell-footer-root">
       <div class="shell-footer-scaffold">
-        <section class="expanded-panel" ${this.#state.mapExpanded ? '' : 'hidden'}>
+        <section class="expanded-panel" id="delivery-expanded" ${this.#state.mapExpanded ? '' : 'hidden'}>
           <div class="expanded-heading">
             <h2 class="map-heading">Delivery map</h2>
             <button type="button" class="text-button" data-action="collapse-map" aria-label="Collapse delivery map">Close</button>
@@ -900,3 +934,4 @@ export {
   LAYOUT_MODES,
   CONTENT_LAYOUTS,
 } from './host-layout.js';
+export { NOTICE_TOP_GAP_PX };

@@ -79,6 +79,16 @@ test('expanded delivery map uses a concise functional heading', async () => {
   assert.doesNotMatch(shell.shadowRoot.querySelector('.expanded-panel').textContent, /considered next step/i);
 });
 
+test('delivery map toggle references the expanded section id', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(InsprFlowShell, readyBuild());
+  const toggle = shell.shadowRoot.querySelector('[data-action="toggle-map"]');
+  const panel = shell.shadowRoot.querySelector('#delivery-expanded');
+  assert.ok(toggle);
+  assert.ok(panel);
+  assert.equal(toggle.getAttribute('aria-controls'), 'delivery-expanded');
+});
+
 test('review dialog keeps scope and authority explanation at confirmation', async () => {
   const InsprFlowShell = await loadFlowShell();
   const shell = mountShell(InsprFlowShell, readyBuild());
@@ -96,6 +106,51 @@ test('chrome spacing stays compact in primary shell regions', () => {
   assert.doesNotMatch(css, /\.shell-header\s*\{[^}]*height:\s*88px/);
 });
 
-test('narrow host width lowers notice below wrapped header', () => {
-  assert.match(css, /@container flow-shell-host \(max-width: 760px\)[\s\S]*\.notice\.shell-chrome-fixed[\s\S]*top:\s*96px/);
+test('fixed-chrome separation keeps host free of container containment', () => {
+  assert.doesNotMatch(css, /:host\s*\{[^}]*container-type:/);
+  assert.doesNotMatch(css, /flow-shell-host/);
+  assert.match(css, /\.shell-root\s*\{[^}]*container-type:\s*inline-size/);
+  assert.match(css, /\.notice\s*\{[^}]*top:\s*var\(--shell-notice-top/);
+});
+
+test('resolveNoticeTop tracks measured header bottom with configurable gap', async () => {
+  const { resolveNoticeTop, NOTICE_TOP_GAP_PX } = await import('../src/inspr-flow-shell.js');
+  assert.equal(resolveNoticeTop(123), 135);
+  assert.equal(resolveNoticeTop(56.2), 69);
+  assert.equal(resolveNoticeTop(-4), NOTICE_TOP_GAP_PX);
+  assert.equal(resolveNoticeTop(100, 0), 100);
+});
+
+test('notice geometry sync follows header resize lifecycle', async () => {
+  const { resolveNoticeTop } = await import('../src/inspr-flow-shell.js');
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(InsprFlowShell, readyBuild());
+  const header = shell.shadowRoot.querySelector('.shell-header');
+
+  const assertNoticeBelowHeader = () => {
+    const headerBottom = header.getBoundingClientRect().bottom;
+    const noticeTop = Number.parseFloat(shell.style.getPropertyValue('--shell-notice-top'));
+    assert.ok(Number.isFinite(noticeTop));
+    assert.equal(noticeTop, resolveNoticeTop(headerBottom));
+    assert.ok(noticeTop >= headerBottom - 1);
+  };
+
+  assertNoticeBelowHeader();
+
+  header.getBoundingClientRect = () => ({
+    bottom: 123,
+    top: 0,
+    left: 0,
+    right: 320,
+    width: 272,
+    height: 123,
+    x: 48,
+    y: 0,
+    toJSON() {
+      return {};
+    },
+  });
+  shell.showNotice('QA: functional status notice');
+  assert.equal(Number.parseFloat(shell.style.getPropertyValue('--shell-notice-top')), resolveNoticeTop(123));
+  assertNoticeBelowHeader();
 });

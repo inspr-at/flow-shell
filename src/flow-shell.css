@@ -10,6 +10,8 @@
   --shell-display: ui-rounded, 'Avenir Next', 'Segoe UI', sans-serif;
   --shell-footer-space: 183px;
   --shell-content-padding-inline: 48px;
+  container-type: inline-size;
+  container-name: flow-shell-host;
   display: block;
   position: relative;
   color: var(--ink);
@@ -764,6 +766,12 @@ dialog h2 {
 :host([layout-mode='bounded']) .notice.shell-chrome-fixed {
   left: calc(var(--shell-fixed-left, 0px) + var(--shell-fixed-width, 100%) / 2);
   max-width: min(90vw, var(--shell-fixed-width, 100%));
+}
+
+@container flow-shell-host (max-width: 760px) {
+  .notice.shell-chrome-fixed {
+    top: 96px;
+  }
 }
 
 .muted {

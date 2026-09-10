@@ -95,3 +95,7 @@ test('chrome spacing stays compact in primary shell regions', () => {
   assert.match(css, /\.health\s*\{[^}]*padding:\s*12px/);
   assert.doesNotMatch(css, /\.shell-header\s*\{[^}]*height:\s*88px/);
 });
+
+test('narrow host width lowers notice below wrapped header', () => {
+  assert.match(css, /@container flow-shell-host \(max-width: 760px\)[\s\S]*\.notice\.shell-chrome-fixed[\s\S]*top:\s*96px/);
+});

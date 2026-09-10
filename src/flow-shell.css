@@ -80,10 +80,10 @@ input:focus-visible {
 }
 
 .shell-header {
-  height: 88px;
+  height: 56px;
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 16px;
   min-width: 0;
   padding: 0 var(--shell-content-padding-inline);
   border-bottom: 1px solid rgba(213, 224, 231, 0.7);
@@ -102,15 +102,15 @@ input:focus-visible {
   gap: 8px;
   flex-shrink: 0;
   font-family: var(--shell-display);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 3px;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: 2px;
   padding: 0;
 }
 
 .identity img {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
 }
 
 .header-divider {
@@ -148,7 +148,7 @@ input:focus-visible {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   flex-shrink: 0;
   min-width: 0;
 }
@@ -177,7 +177,7 @@ input:focus-visible {
 
 .shell-main {
   position: relative;
-  min-height: calc(100dvh - 268px);
+  min-height: calc(100dvh - 220px);
 }
 
 :host([content-layout='fill']) .shell-main {
@@ -193,7 +193,7 @@ input:focus-visible {
   align-items: center;
   gap: 7px;
   font-size: 11px;
-  padding: 25px var(--shell-content-padding-inline);
+  padding: 12px var(--shell-content-padding-inline);
 }
 
 :host([content-layout='fill']) .health {
@@ -267,7 +267,7 @@ input:focus-visible {
 
 .shell-footer-scaffold {
   --shell-content-padding-inline: inherit;
-  padding: 17px var(--shell-content-padding-inline) 15px;
+  padding: 12px var(--shell-content-padding-inline) 10px;
 }
 
 .shell-chrome-fixed {
@@ -336,19 +336,31 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .bar-heading button {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   padding: 0;
+  min-width: 0;
+}
+
+.map-heading-inline {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .bar-heading strong {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 550;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .bar-context {
@@ -365,7 +377,7 @@ input:focus-visible {
   display: flex;
   position: relative;
   justify-content: space-between;
-  margin: 0 1px 16px;
+  margin: 0 1px 10px;
 }
 
 .steps::before {
@@ -518,8 +530,8 @@ input:focus-visible {
 }
 
 .expanded-panel {
-  padding: 8px 0 23px;
-  max-height: 56dvh;
+  padding: 4px 0 14px;
+  max-height: 50dvh;
   overflow: auto;
 }
 
@@ -527,12 +539,15 @@ input:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.expanded-heading h2 {
-  font: 550 20px var(--shell-display);
-  letter-spacing: -0.6px;
-  margin: 10px 0 24px;
+.map-heading {
+  font: 600 13px var(--shell-font);
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--ink);
 }
 
 .branch-map {
@@ -614,8 +629,8 @@ input:focus-visible {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-top: 24px;
-  padding-top: 14px;
+  margin-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid #e1e9ee;
   font-size: 11px;
   color: var(--muted);
@@ -733,7 +748,7 @@ dialog h2 {
 }
 
 .notice {
-  top: 103px;
+  top: 68px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
@@ -766,23 +781,23 @@ dialog h2 {
 
   .shell-header {
     height: auto;
-    min-height: 72px;
-    gap: 8px 12px;
+    min-height: 52px;
+    gap: 6px 10px;
     flex-wrap: wrap;
     align-content: center;
-    padding-block: 8px;
+    padding-block: 6px;
   }
 
   .identity {
     order: 1;
     flex: 0 0 auto;
-    font-size: 17px;
-    letter-spacing: 2px;
+    font-size: 15px;
+    letter-spacing: 1.5px;
   }
 
   .identity img {
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
   }
 
   .header-divider {
@@ -797,8 +812,7 @@ dialog h2 {
     min-height: 32px;
   }
 
-  .project .subtitle,
-  .shell-label:not(.shell-label-context) {
+  .project .subtitle {
     display: none;
   }
 
@@ -810,7 +824,7 @@ dialog h2 {
   }
 
   .health {
-    padding-block: 19px;
+    padding-block: 10px;
     font-size: 10px;
     flex-wrap: wrap;
   }
@@ -838,11 +852,6 @@ dialog h2 {
     padding: 0 8px;
     gap: 5px;
     font-size: 11px;
-  }
-
-  .expanded-heading h2 {
-    font-size: 16px;
-    max-width: 240px;
   }
 
   .batch-row {

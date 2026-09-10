@@ -760,7 +760,10 @@ export class InsprFlowShell extends HTMLElement {
       : '';
     const healthDot = this.#state.health.status === 'available' ? 'dot' : `dot ${this.#state.health.status}`;
     const mapDetail = this.#state.delivery.mapDetail || 'Requirements baseline gates delivery work. Stage exploration never executes.';
-    const draftLabel = `${this.#state.delivery.draftCount} ideas waiting outside this delivery`;
+    const draftLabel =
+      this.#state.delivery.draftCount === 1
+        ? '1 draft outside batch'
+        : `${this.#state.delivery.draftCount} drafts outside batch`;
 
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="${new URL('./flow-shell.css', import.meta.url).href}" data-shell-css="true">
@@ -778,7 +781,6 @@ export class InsprFlowShell extends HTMLElement {
         <div class="header-end">
           ${instance}
           ${version}
-          <span class="shell-label">Flow shell · intent boundary</span>
           <button type="button" class="avatar" data-action="account" aria-label="Account and authority">${escapeHtml(this.#state.header.userInitials)}</button>
         </div>
       </header>
@@ -799,10 +801,7 @@ export class InsprFlowShell extends HTMLElement {
       <div class="shell-footer-scaffold">
         <section class="expanded-panel" ${this.#state.mapExpanded ? '' : 'hidden'}>
           <div class="expanded-heading">
-            <div>
-              <span class="eyebrow">YOUR DELIVERY MAP</span>
-              <h2>One live product. A considered next step.</h2>
-            </div>
+            <h2 class="map-heading">Delivery map</h2>
             <button type="button" class="text-button" data-action="collapse-map" aria-label="Collapse delivery map">Close</button>
           </div>
           <div class="branch-map">
@@ -830,12 +829,12 @@ export class InsprFlowShell extends HTMLElement {
           </div>
         </section>
         <div class="bar-heading">
-          <button type="button" data-action="toggle-map" aria-expanded="${this.#state.mapExpanded}" aria-controls="delivery-expanded">
-            <span class="eyebrow">DELIVERY</span>
+          <button type="button" data-action="toggle-map" aria-expanded="${this.#state.mapExpanded}" aria-controls="delivery-expanded" aria-label="Toggle delivery map for ${escapeHtml(this.#state.delivery.batchTitle)}">
+            <span class="map-heading-inline">Delivery</span>
             <strong>${escapeHtml(this.#state.delivery.batchTitle)}</strong>
             <span class="expand-symbol" aria-hidden="true">${this.#state.mapExpanded ? '↓' : '↑'}</span>
           </button>
-          <span class="bar-context">${escapeHtml(this.#state.header.projectName)} · one stream</span>
+          <span class="bar-context">${escapeHtml(this.#state.header.projectName)}</span>
         </div>
         <nav class="steps" aria-label="Delivery stages">${this.renderSteps()}</nav>
         <div class="bar-bottom">

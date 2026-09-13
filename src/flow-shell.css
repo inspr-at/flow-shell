@@ -480,10 +480,37 @@ input:focus-visible {
 .bar-bottom {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 12px 20px;
   color: var(--muted);
   font-size: 10px;
   flex-wrap: wrap;
+}
+
+.progress-summary {
+  display: flex;
+  flex: 1 1 320px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.progress-freshness {
+  margin-left: 7px;
+  white-space: nowrap;
+}
+
+.progress-details {
+  flex: 0 1 auto;
+}
+
+.progress-details summary {
+  color: #3e6177;
+  cursor: pointer;
+}
+
+.progress-details .progress-value {
+  display: block;
+  margin-top: 5px;
 }
 
 .bar-bottom strong {
@@ -507,6 +534,11 @@ input:focus-visible {
   color: var(--ink);
   max-width: 120px;
   padding: 3px;
+}
+
+.review-cta {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .stale .progress-value {
@@ -681,6 +713,104 @@ dialog h2 {
   margin: 14px 20px 15px 0;
 }
 
+.review-batch-title {
+  margin: -6px 0 18px;
+  color: var(--muted);
+}
+
+.review-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.review-choice > span,
+.review-choice > label {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #dbe5ea;
+  border-radius: 10px;
+  background: #f6f9fa;
+}
+
+.review-choice select {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #c8d8e0;
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+}
+
+.review-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-scope {
+  margin: 0 0 16px;
+}
+
+.review-scope ul {
+  margin: 7px 0 0;
+  padding-left: 20px;
+}
+
+.review-scope li {
+  margin: 4px 0;
+}
+
+.review-details {
+  border-block: 1px solid #e1e8ec;
+  padding: 11px 0;
+}
+
+.review-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.review-details dl {
+  margin: 12px 0;
+}
+
+.review-details dl div {
+  display: grid;
+  grid-template-columns: 125px minmax(0, 1fr);
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 11px;
+}
+
+.review-details dt {
+  color: var(--muted);
+}
+
+.review-details dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-details p {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.review-blocker {
+  min-height: 19px;
+  margin: 12px 0 0;
+  color: #6f5520;
+  font-size: 12px;
+  font-weight: 550;
+}
+
 .modal-close {
   position: absolute;
   right: 14px;
@@ -745,6 +875,7 @@ dialog h2 {
   gap: 12px;
   justify-content: flex-start;
   margin-top: 25px;
+  flex-wrap: wrap;
 }
 
 .notice {
@@ -842,10 +973,20 @@ dialog h2 {
 
   .bar-bottom {
     gap: 7px 13px;
+    align-items: stretch;
   }
 
   .mode-label {
-    margin-left: auto;
+    margin-left: 0;
+  }
+
+  .steps {
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+
+  .review-cta {
+    width: 100%;
   }
 
   .step-button {
@@ -918,5 +1059,16 @@ dialog h2 {
 @media (max-width: 760px) {
   dialog {
     padding: 28px 24px;
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
+  }
+
+  .review-choice {
+    grid-template-columns: 1fr;
+  }
+
+  .review-details dl div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 }

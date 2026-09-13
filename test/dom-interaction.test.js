@@ -13,7 +13,7 @@ import {
   teardownMountedNodes,
   triggerVisibilityRefresh,
 } from './dom-harness.js';
-import { DIGEST_B, JAN_ISO, NOW_ISO, NOW_MS, labelledLocalContext, passGate, unknownGate } from './helpers.js';
+import { DIGEST_B, JAN_ISO, NOW_ISO, NOW_MS, labelledLocalContext, passGate, snapshot, unknownGate } from './helpers.js';
 
 installDomHarness();
 
@@ -81,6 +81,85 @@ test('stage navigation keeps the dialog open with gate explanation', async () =>
   assert.equal(dialog.open, true);
   assert.match(dialog.textContent, /Deployable preview artifact not reported yet|evidence/i);
   assert.ok(dialog.getAttribute('aria-label'));
+});
+
+test('host can synchronously take over the cancelable review intent', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(InsprFlowShell, readyBuild());
+  let reviewEvent = null;
+  shell.addEventListener('flow-intent', (event) => {
+    if (event.detail.type !== INTENT_TYPES.REVIEW_BATCH) return;
+    reviewEvent = event;
+    event.preventDefault();
+  });
+
+  shell.openReviewDialog();
+
+  assert.ok(reviewEvent);
+  assert.equal(reviewEvent.cancelable, true);
+  assert.equal(reviewEvent.defaultPrevented, true);
+  assert.equal(shell.shadowRoot.querySelector('dialog[data-shell-dialog]').open, false);
+});
+
+test('uncanceled review intent opens the concise gated fallback dialog', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(InsprFlowShell, readyBuild());
+  let reviewEvent = null;
+  shell.addEventListener('flow-intent', (event) => {
+    if (event.detail.type === INTENT_TYPES.REVIEW_BATCH) reviewEvent = event;
+  });
+
+  shell.openReviewDialog();
+
+  const dialog = shell.shadowRoot.querySelector('dialog[data-shell-dialog]');
+  assert.ok(reviewEvent);
+  assert.equal(reviewEvent.cancelable, true);
+  assert.equal(dialog.open, true);
+  assert.equal(dialog.querySelector('h2').textContent, 'Start this batch?');
+  assert.equal(dialog.querySelector('[data-action="confirm-start"]').textContent, 'Start batch');
+  assert.match(dialog.querySelector('.review-scope').textContent, /Clarify banner/);
+  assert.equal(dialog.querySelector('.review-details').open, false);
+  assert.match(dialog.querySelector('[data-review-blocker]').textContent, /Confirm this batch/);
+  assert.equal(dialog.querySelector('[data-action="confirm-start"]').disabled, true);
+});
+
+test('non-review intents remain non-cancelable', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(InsprFlowShell, readyBuild());
+  let emitted = null;
+  shell.addEventListener('flow-intent', (event) => {
+    emitted = event;
+    event.preventDefault();
+  });
+
+  const accepted = shell.emitIntent({ type: INTENT_TYPES.HEALTH, detail: { executes: false } });
+
+  assert.equal(accepted, true);
+  assert.ok(emitted);
+  assert.equal(emitted.cancelable, false);
+  assert.equal(emitted.defaultPrevented, false);
+});
+
+test('footer makes review primary and collapses duplicate progress', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const sameProgress = snapshot();
+  const shell = mountShell(
+    InsprFlowShell,
+    readyBuild({
+      progress: {
+        taskLabel: 'Current task',
+        overallLabel: 'Overall',
+        task: sameProgress,
+        overall: sameProgress,
+      },
+    }),
+  );
+
+  const review = shell.shadowRoot.querySelector('.bar-bottom [data-action="review-batch"]');
+  assert.ok(review.classList.contains('primary'));
+  assert.equal(review.textContent, 'Review batch');
+  assert.equal(shell.shadowRoot.querySelectorAll('.progress-summary').length, 1);
+  assert.equal(shell.shadowRoot.querySelector('.progress-details'), null);
 });
 
 test('review dialog mode change syncs footer mode and refreshes expiry caption', async () => {

@@ -13,6 +13,7 @@ import {
 } from './state.js';
 import { identityFreshnessIssues } from './identity.js';
 import {
+  INTENT_TYPES,
   createNavigateStageIntent,
   createToggleMapIntent,
   createReviewBatchIntent,
@@ -389,10 +390,11 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   emitIntent(intent) {
-    this.dispatchEvent(
+    return this.dispatchEvent(
       new CustomEvent('flow-intent', {
         bubbles: true,
         composed: true,
+        cancelable: intent.type === INTENT_TYPES.REVIEW_BATCH,
         detail: intent.error ? { error: intent.error, ...intent } : intent,
       }),
     );
@@ -479,9 +481,20 @@ export class InsprFlowShell extends HTMLElement {
       executionMode: mode?.value ?? this.#state.selectedExecutionMode,
       now,
     });
-    const reasonEl = dialog.querySelector('[data-review-gate-reason]');
-    if (reasonEl) {
-      reasonEl.textContent = gate.reasons.join(' ') || 'Ready to emit start intent after confirmation.';
+    const readinessGate = this.#reviewGateState({
+      confirmed: true,
+      executionMode: mode?.value ?? this.#state.selectedExecutionMode,
+      now,
+    });
+    const blocker = dialog.querySelector('[data-review-blocker]');
+    if (blocker) {
+      blocker.textContent =
+        readinessGate.reasons[0] ??
+        (confirm.checked ? 'Ready to start.' : 'Confirm this batch to continue.');
+    }
+    const gateDetails = dialog.querySelector('[data-review-gate-details]');
+    if (gateDetails) {
+      gateDetails.textContent = readinessGate.reasons.join(' ') || 'No readiness blockers reported.';
     }
     const identityCaption = dialog.querySelector('[data-identity-caption]');
     if (identityCaption) identityCaption.textContent = this.#identityCaption(now);
@@ -612,6 +625,7 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   openReviewDialog() {
+    if (!this.emitIntent(createReviewBatchIntent(this.#state))) return;
     const now = Date.now();
     const action = this.#state.selectedAction ?? 'build';
     this.#reviewSnapshot = confirmationSnapshot(this.#state, {
@@ -620,27 +634,23 @@ export class InsprFlowShell extends HTMLElement {
       executionMode: this.#state.selectedExecutionMode,
     });
     this.#scheduleClockAging();
-    this.emitIntent(createReviewBatchIntent(this.#state));
     const items = this.#state.delivery.scopeItems
-      .map((item) => `<div><strong>${escapeHtml(item)}</strong><span>Included</span></div>`)
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
       .join('');
-    const gate = canEmitStartIntent(this.#state, {
-      confirmed: false,
+    const readinessGate = this.#reviewGateState({
+      confirmed: true,
       executionMode: this.#state.selectedExecutionMode,
-      action,
       now,
     });
     const identityCaption = this.#identityCaption(now);
     const html = `
       <button class="modal-close" type="button" data-action="modal-close" aria-label="Close dialog">×</button>
       <span class="eyebrow">REVIEW BEFORE YOU BEGIN</span>
-      <h2>${escapeHtml(this.#state.delivery.batchTitle)}</h2>
-      <p>Explicit start binds to action <code>${escapeHtml(action)}</code>, batch <code>${escapeHtml(this.#state.delivery.batchRef ?? 'missing')}</code>, and baseline digest below. The host must revalidate authority. Confirmation expires at <span data-review-expiry>${escapeHtml(this.#reviewSnapshot.expiresAt)}</span>.</p>
-      <p class="muted" style="font-size:11px" data-identity-caption>${escapeHtml(identityCaption)}</p>
-      <div class="detail-list">${items || '<div><strong>Scope items not supplied</strong><span>Host</span></div>'}</div>
-      <p style="font-size:11px">UI gates and identity schema checks are advisory. This dialog emits intent only; it is not a security or auth backend.</p>
-      <label class="checklist"><input type="checkbox" data-review-confirm> I confirm this scope, selected action, execution mode, and evidence snapshot.</label>
-      <label class="checklist">Execution mode
+      <h2>Start this batch?</h2>
+      <p class="review-batch-title">${escapeHtml(this.#state.delivery.batchTitle)}</p>
+      <div class="review-choice">
+        <span><span class="review-label">Action</span><strong>${escapeHtml(action.replaceAll('_', ' '))}</strong></span>
+        <label><span class="review-label">Execution mode</span>
         <select data-action="execution-mode">${this.#state.executionModes
           .map(
             (mode) =>
@@ -648,9 +658,27 @@ export class InsprFlowShell extends HTMLElement {
           )
           .join('')}</select>
       </label>
-      <p class="muted" style="font-size:11px" data-review-gate-reason>${escapeHtml(gate.reasons.join(' ') || 'Ready to emit start intent after confirmation.')}</p>
+      </div>
+      <div class="review-scope">
+        <span class="review-label">Scope</span>
+        <ul>${items || '<li>Scope items not supplied</li>'}</ul>
+      </div>
+      <details class="review-details">
+        <summary>Details</summary>
+        <dl>
+          <div><dt>Batch</dt><dd><code>${escapeHtml(this.#state.delivery.batchRef ?? 'missing')}</code></dd></div>
+          <div><dt>Baseline</dt><dd><code>${escapeHtml(this.#state.delivery.baselineRef ?? 'missing')}</code></dd></div>
+          <div><dt>Baseline digest</dt><dd><code>${escapeHtml(this.#state.delivery.baselineDigest ?? 'missing')}</code></dd></div>
+          <div><dt>Confirmation expires</dt><dd data-review-expiry>${escapeHtml(this.#reviewSnapshot.expiresAt)}</dd></div>
+          <div><dt>Identity</dt><dd data-identity-caption>${escapeHtml(identityCaption)}</dd></div>
+        </dl>
+        <p data-review-gate-details data-review-gate-reason>${escapeHtml(readinessGate.reasons.join(' ') || 'No readiness blockers reported.')}</p>
+        <p>Start emits intent only. The host must revalidate authority, identity, and evidence.</p>
+      </details>
+      <label class="checklist"><input type="checkbox" data-review-confirm> I confirm this batch.</label>
+      <p class="review-blocker" data-review-blocker>${escapeHtml(readinessGate.reasons[0] || 'Confirm this batch to continue.')}</p>
       <div class="actions">
-        <button class="primary" type="button" data-action="confirm-start" disabled>Emit start intent</button>
+        <button class="primary" type="button" data-action="confirm-start" disabled>Start batch</button>
         <button class="text-button" type="button" data-action="modal-close">Keep as draft</button>
       </div>`;
     this.openDialog(html, {
@@ -665,16 +693,28 @@ export class InsprFlowShell extends HTMLElement {
     const confirm = dialog.querySelector('[data-review-confirm]');
     const start = dialog.querySelector('[data-action="confirm-start"]');
     const mode = dialog.querySelector('[data-action="execution-mode"]');
+    const blocker = dialog.querySelector('[data-review-blocker]');
+    const gateDetails = dialog.querySelector('[data-review-gate-details]');
 
     const refresh = () => {
+      const now = Date.now();
       const gate = this.#reviewGateState({
         confirmed: confirm.checked,
         executionMode: mode.value,
-        now: Date.now(),
+        now,
       });
-      const reasonEl = dialog.querySelector('[data-review-gate-reason]');
-      if (reasonEl) {
-        reasonEl.textContent = gate.reasons.join(' ') || 'Ready to emit start intent after confirmation.';
+      const readinessGate = this.#reviewGateState({
+        confirmed: true,
+        executionMode: mode.value,
+        now,
+      });
+      if (blocker) {
+        blocker.textContent =
+          readinessGate.reasons[0] ??
+          (confirm.checked ? 'Ready to start.' : 'Confirm this batch to continue.');
+      }
+      if (gateDetails) {
+        gateDetails.textContent = readinessGate.reasons.join(' ') || 'No readiness blockers reported.';
       }
       start.disabled = !confirm.checked || !gate.allowed;
     };
@@ -773,10 +813,29 @@ export class InsprFlowShell extends HTMLElement {
       'stale';
     const hostLabel = this.#state.progress.freshnessLabel;
     const fresh = computedStale ? computedFresh : hostLabel || computedFresh;
+    const rows = [
+      {
+        present: Boolean(this.#state.progress.overall),
+        label: this.#state.progress.overallLabel,
+        line: overallLine,
+        stale: overallStale,
+      },
+      {
+        present: Boolean(this.#state.progress.task),
+        label: this.#state.progress.taskLabel,
+        line: taskLine,
+        stale: taskStale,
+      },
+    ].filter((row) => row.present);
+    const primary = rows[0] ?? {
+      label: this.#state.progress.overallLabel,
+      line: overallLine,
+      stale: overallStale,
+    };
+    const secondary = rows.slice(1).find((row) => row.line !== primary.line);
     return `
-      <div class="${taskStale ? 'stale' : ''}"><strong>${escapeHtml(this.#state.progress.taskLabel)}</strong> · <span class="progress-value ${taskStale ? 'stale' : ''}">${escapeHtml(taskLine)}</span></div>
-      <div class="${overallStale ? 'stale' : ''}"><strong>${escapeHtml(this.#state.progress.overallLabel)}</strong> · <span class="progress-value ${overallStale ? 'stale' : ''}">${escapeHtml(overallLine)}</span></div>
-      <div>${escapeHtml(fresh)}</div>`;
+      <div class="progress-summary ${primary.stale ? 'stale' : ''}"><strong>${escapeHtml(primary.label)}</strong> · <span class="progress-value ${primary.stale ? 'stale' : ''}">${escapeHtml(primary.line)}</span><span class="progress-freshness">${escapeHtml(fresh)}</span></div>
+      ${secondary ? `<details class="progress-details"><summary>${escapeHtml(secondary.label)} progress</summary><span class="progress-value ${secondary.stale ? 'stale' : ''}">${escapeHtml(secondary.line)}</span></details>` : ''}`;
   }
 
   render() {
@@ -881,7 +940,7 @@ export class InsprFlowShell extends HTMLElement {
               )
               .join('')}</select>
           </label>
-          <button type="button" class="text-button" data-action="review-batch">Review batch</button>
+          <button type="button" class="primary review-cta" data-action="review-batch">Review batch</button>
         </div>
       </div>
       </div>

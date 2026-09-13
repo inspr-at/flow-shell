@@ -96,7 +96,11 @@ test('review dialog keeps scope and authority explanation at confirmation', asyn
 
   const dialog = shell.shadowRoot.querySelector('dialog[data-shell-dialog]');
   assert.match(dialog.textContent, /host must revalidate authority/i);
-  assert.match(dialog.textContent, /not a security or auth backend/i);
+  const details = dialog.querySelector('.review-details');
+  assert.ok(details);
+  assert.equal(details.open, false);
+  assert.match(details.textContent, /host must revalidate authority/i);
+  assert.match(dialog.querySelector('.review-scope').textContent, /Clarify banner/);
   assert.ok(dialog.querySelector('[data-identity-caption]'));
 });
 

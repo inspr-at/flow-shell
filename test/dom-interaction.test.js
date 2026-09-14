@@ -67,6 +67,46 @@ test('repeated render and reconnect emit one intent per map toggle gesture', asy
   assert.equal(shell.shellState.mapExpanded, false);
 });
 
+test('header version slot preserves escaped fallback and host content across rerenders', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const shell = mountShell(
+    InsprFlowShell,
+    readyBuild({ header: { version: 'v0.2.1 <fallback>' } }),
+  );
+
+  const fallbackSlot = shell.shadowRoot.querySelector('slot[name="header-version"]');
+  assert.ok(fallbackSlot);
+  assert.equal(fallbackSlot.closest('button'), null);
+  assert.equal(fallbackSlot.querySelector('.shell-label').textContent, 'v0.2.1 <fallback>');
+  assert.equal(fallbackSlot.querySelector('fallback'), null);
+
+  const version = document.createElement('button');
+  version.slot = 'header-version';
+  version.dataset.action = 'account';
+  version.textContent = 'host version';
+  let clicks = 0;
+  version.addEventListener('click', () => {
+    clicks += 1;
+  });
+  shell.appendChild(version);
+  const intents = collectIntents(shell);
+
+  version.click();
+  assert.equal(clicks, 1);
+  assert.equal(intents.length, 0);
+  assert.deepEqual(fallbackSlot.assignedElements(), [version]);
+
+  shell.shellState = readyBuild({ header: { projectName: 'Rerendered project', version: 'v0.2.2' } });
+  const rerenderedSlot = shell.shadowRoot.querySelector('slot[name="header-version"]');
+  assert.notEqual(rerenderedSlot, fallbackSlot);
+  assert.deepEqual(rerenderedSlot.assignedElements(), [version]);
+  assert.equal(shell.contains(version), true);
+
+  version.click();
+  assert.equal(clicks, 2);
+  assert.equal(intents.length, 0);
+});
+
 test('stage navigation keeps the dialog open with gate explanation', async () => {
   const InsprFlowShell = await loadFlowShell();
   const shell = mountShell(InsprFlowShell, readyBuild());

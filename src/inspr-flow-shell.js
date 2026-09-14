@@ -253,6 +253,10 @@ export class InsprFlowShell extends HTMLElement {
 
     let slottedFixed = 0;
     for (const child of this.children) {
+      // Named slots belong to shell chrome, not the default host-content
+      // region. Their controls and nested layout markers must not reserve
+      // body/toolbar space in fill layout.
+      if (child.slot) continue;
       const region = child.getAttribute('data-flow-host-region');
       if (region === 'toolbar' || region === 'footer') {
         slottedFixed += child.getBoundingClientRect().height;
@@ -536,7 +540,14 @@ export class InsprFlowShell extends HTMLElement {
     root.addEventListener('change', (event) => this.#handleChange(event));
   }
 
+  #isHeaderVersionSlotEvent(event) {
+    return event
+      .composedPath()
+      .some((node) => node?.localName === 'slot' && node?.name === 'header-version');
+  }
+
   #handleClick(event) {
+    if (this.#isHeaderVersionSlotEvent(event)) return;
     const dialog = this.shadowRoot.querySelector('dialog[data-shell-dialog]');
     if (dialog?.open && event.target === dialog) {
       dialog.close();
@@ -596,6 +607,7 @@ export class InsprFlowShell extends HTMLElement {
   }
 
   #handleChange(event) {
+    if (this.#isHeaderVersionSlotEvent(event)) return;
     if (event.target.matches('[data-action="footer-execution-mode"]')) {
       this.#state = withExecutionMode(this.#state, event.target.value);
       this.render();
@@ -873,7 +885,7 @@ export class InsprFlowShell extends HTMLElement {
         </button>
         <div class="header-end">
           ${instance}
-          ${version}
+          <slot name="header-version">${version}</slot>
           <button type="button" class="avatar" data-action="account" aria-label="Account and authority">${escapeHtml(this.#state.header.userInitials)}</button>
         </div>
       </header>

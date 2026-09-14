@@ -286,6 +286,39 @@ test('fill layout measures chrome above slot in host-local coordinates', () => {
   assert.equal(resolveFillFooterCapacity(844, 379), 465);
 });
 
+test('fill layout excludes named header slot content from default content measurement', async () => {
+  const InsprFlowShell = await loadFlowShell();
+  const { frame, shell } = mountTwoNodeFillHost(InsprFlowShell, { height: 844, width: 342 });
+  const version = document.createElement('span');
+  version.slot = 'header-version';
+  version.setAttribute('data-flow-host-region', 'toolbar');
+  version.textContent = 'host version';
+  version.getBoundingClientRect = () => ({
+    height: 400,
+    width: 80,
+    top: 0,
+    left: 0,
+    right: 80,
+    bottom: 400,
+    x: 0,
+    y: 0,
+    toJSON() {
+      return {};
+    },
+  });
+  shell.appendChild(version);
+
+  resyncFillFooter(shell);
+  await waitForLayout();
+
+  assert.deepEqual(
+    shell.shadowRoot.querySelector('slot[name="header-version"]').assignedElements(),
+    [version],
+  );
+  assert.equal(Number.parseInt(shell.style.getPropertyValue('--shell-footer-max-height'), 10), 465);
+  frame.remove();
+});
+
 function mockFillHostMetrics(shell, {
   hostHeight = 844,
   hostTop = 0,
